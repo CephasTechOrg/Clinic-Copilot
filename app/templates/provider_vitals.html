@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% block content %}
 <h1>Vitals Entry</h1>
 <p class="muted">
-  Patient: <strong>{{ intake.full_name }}</strong> — {{ intake.chief_complaint
+  Patient: <strong>{{ intake.full_name }}</strong> - {{ intake.chief_complaint
   }}
 </p>
 
@@ -14,7 +14,7 @@
       >Respiratory Rate<input name="respiratory_rate" type="number" required
     /></label>
     <label
-      >Temperature (°C)<input
+      >Temperature (C)<input
         name="temperature_c"
         type="number"
         step="0.1"

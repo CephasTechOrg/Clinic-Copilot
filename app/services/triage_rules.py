@@ -42,7 +42,7 @@ def rule_based_flags(
 
     # Fever risk
     if temperature_c >= 39.0:
-        flags.append("Temp ≥ 39°C (high fever)")
+        flags.append("Temp >= 39C (high fever)")
         priority = max_priority(priority, "MED")
 
     # Low blood pressure risk (very simple rule)

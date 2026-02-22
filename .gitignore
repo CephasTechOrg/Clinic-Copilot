@@ -1,4 +1,5 @@
 .env
+*.db
 /pyspark-warehouse
 __pycache__/
 *.pyc
@@ -11,6 +12,7 @@ ENV/
 build/
 dist/
 *.egg-info/
+node_modules/
 .idea/
 .vscode/
 .DS_Store

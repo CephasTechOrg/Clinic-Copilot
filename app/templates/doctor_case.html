@@ -8,7 +8,43 @@
 
   <div class="split">
     <div>
-      <h3>AI Summary</h3>
+      <h3>Patient Details</h3>
+      <p><strong>Address:</strong> {{ intake.address }}</p>
+      <p><strong>Duration:</strong> {{ intake.duration }}</p>
+      <p><strong>Severity:</strong> {{ intake.severity }}</p>
+      <h3>Symptoms</h3>
+      <pre class="pre">{{ intake.symptoms }}</pre>
+    </div>
+    <div>
+      <h3>History</h3>
+      <pre class="pre">{{ intake.history }}</pre>
+      <h3>Medications</h3>
+      <pre class="pre">{{ intake.medications }}</pre>
+      <h3>Allergies</h3>
+      <pre class="pre">{{ intake.allergies }}</pre>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Vitals</h2>
+  {% if intake.vitals %}
+  <div class="grid2">
+    <div><strong>Heart Rate:</strong> {{ intake.vitals.heart_rate }} bpm</div>
+    <div><strong>Respiratory Rate:</strong> {{ intake.vitals.respiratory_rate }}</div>
+    <div><strong>Temperature:</strong> {{ intake.vitals.temperature_c }} C</div>
+    <div><strong>SpO2:</strong> {{ intake.vitals.spo2 }}%</div>
+    <div><strong>Blood Pressure:</strong> {{ intake.vitals.systolic_bp }}/{{ intake.vitals.diastolic_bp }}</div>
+  </div>
+  {% else %}
+  <p class="muted">Vitals not recorded.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>AI Summary</h2>
+  <div class="split">
+    <div>
       <p>{{ intake.clinical_summary.short_summary }}</p>
 
       <h3>Priority</h3>

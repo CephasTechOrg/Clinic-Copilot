@@ -1,16 +1,16 @@
-# Clinic Co-Pilot — Pitch (AI in Healthcare)
+# Clinic Co-Pilot - Pitch (AI in Healthcare)
 
 ## The Story (Hook)
 A patient walks into a clinic with chest tightness and dizziness.
-They’ve been waiting for hours.
-They’re anxious, tired, and scared — and when they finally get called in, they get only a few minutes.
+They've been waiting for hours.
+They're anxious, tired, and scared - and when they finally get called in, they get only a few minutes.
 
-The doctor isn’t careless.
+The doctor isn't careless.
 The doctor is overwhelmed.
 
 In a busy hospital, clinicians can see dozens of patients in a shift.
 Vital details get buried across forms, quick notes, and memory.
-Small red flags can be missed — not because people don’t care, but because the system is overloaded.
+Small red flags can be missed - not because people don't care, but because the system is overloaded.
 
 When healthcare becomes rushed, patients feel unheard.
 And when patients feel unheard, outcomes get worse.
@@ -22,7 +22,7 @@ Healthcare intake today is:
 - Risky under pressure (fatigue + overload increases the chance of overlooking red flags)
 - Inefficient (long waits, delayed decisions, slower triage)
 
-Clinics don’t need “more AI.”
+Clinics don't need "more AI."
 They need **less chaos**.
 
 ## The Solution
@@ -45,7 +45,7 @@ The doctor stays in control:
 - Decide: admit / discharge / further testing
 
 This is not AI replacing clinicians.
-It’s AI giving clinicians their time back — and giving patients their voice back.
+It's AI giving clinicians their time back - and giving patients their voice back.
 
 ## Why This Wins (Impact + Efficiency)
 Clinic Co-Pilot is built for reality:
@@ -63,11 +63,11 @@ Clinic Co-Pilot is built for reality:
    - Suggested next questions/tests
 4) Doctor edits notes and clicks Admit / Not Admit (saved)
 
-The “wow” moment:
+The "wow" moment:
 The system turns raw text + vitals into a structured clinical brief in seconds.
 
 ## Closing
-Healthcare doesn’t need more complexity.
+Healthcare doesn't need more complexity.
 It needs clarity at the moment it matters most.
 
 **Clinic Co-Pilot** makes every patient easier to understand,

@@ -25,7 +25,7 @@ Clinic Co-Pilot is a lightweight AI-powered clinical intake + decision-support a
 ## Why It Matters
 
 Clinicians are overloaded and intake information is fragmented.
-Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity — fast.
+Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity - fast.
 
 ## Tech Stack
 

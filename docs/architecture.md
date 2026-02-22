@@ -1,4 +1,4 @@
-# Clinic Co-Pilot — Architecture
+# Clinic Co-Pilot - Architecture
 
 ## Goal
 
@@ -40,16 +40,16 @@ Turn fragmented intake + vitals into a structured clinician-ready summary and tr
    - HR > 120 + fever => possible infection/sepsis risk flag
    - chest pain + sweating => cardiac risk flag
 
-This helps you explain “safety-first” design to judges.
+This helps you explain "safety-first" design to judges.
 
 ## Data Flow
 
-### Patient → Provider → Doctor
+### Patient -> Provider -> Doctor
 
-1. Patient submits intake form → saved to DB
-2. Provider selects patient → adds vitals → saved to DB
+1. Patient submits intake form -> saved to DB
+2. Provider selects patient -> adds vitals -> saved to DB
 3. System calls AI service with intake + vitals
-4. AI returns structured summary + flags → saved to DB
+4. AI returns structured summary + flags -> saved to DB
 5. Doctor dashboard loads the case:
    - shows summary
    - doctor edits notes
@@ -67,4 +67,4 @@ This helps you explain “safety-first” design to judges.
 - Minimal PII display
 - Avoid storing unnecessary identifiers
 - Local-only SQLite for demo
-- Add a disclaimer: “assistant, not diagnosis”
+- Add a disclaimer: "assistant, not diagnosis"
