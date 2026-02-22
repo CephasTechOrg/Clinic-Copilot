@@ -72,3 +72,140 @@
 - [x] Input validation and sanitization
 
 OK Overall: Core product + backend scaffold + Gemini AI + UI prompts are **covered**.
+
+---
+
+## 9) Auth + Role-Based Access Control (RBAC) - Security Layer
+
+> **Goal**: Secure patient data. Only authenticated staff can access sensitive info.
+
+### 9.1) Authentication System
+
+- [x] Create `users` table:
+  - `id` (pk)
+  - `staff_id` (unique, e.g., `NURSE-1001`, `DOC-2001`)
+  - `password_hash` (bcrypt/argon2)
+  - `role` (enum: `NURSE`, `DOCTOR`)
+  - `full_name`
+  - `is_active` (boolean)
+  - `created_at`
+
+- [x] Build staff login endpoint: `POST /auth/login`
+  - Accept: `staff_id` + `password`
+  - Return: JWT access token
+  - Store token in HttpOnly cookie or session storage
+
+- [x] Implement password hashing (bcrypt via `passlib`)
+
+- [x] Implement JWT token creation + verification
+  - Use `python-jose` for JWT
+  - Token contains: `staff_id`, `role`, `exp`
+
+- [x] Create `get_current_user` dependency (FastAPI Depends)
+
+- [x] Add `require_role(role)` guard decorator for NURSE/DOCTOR routes
+
+- [x] Logout endpoint: `POST /auth/logout` (optional, invalidate token)
+
+### 9.2) Database Schema Updates (SIMPLIFIED)
+
+> Keeping existing schema but adding authentication layer
+
+- [x] User model added to models.py
+- [x] Demo users created (NURSE-1001, NURSE-1002, DOC-2001, DOC-2002)
+- [ ] Optional: Add audit trail (entered_by_user_id) to vitals/decisions
+
+### 9.3) Patient Flow (Public - No Auth)
+
+- [x] Patient intake endpoint remains public: `POST /api/intakes`
+- [x] Patient form page remains public (`/patient`)
+
+### 9.4) Nurse Portal Flow (Protected)
+
+- [x] Create nurse login page (`/nurse/login`)
+- [x] Auth check in nurse.js - redirects to login if not authenticated
+- [x] Protected API: `GET /api/intakes` (requires NURSE or DOCTOR role)
+- [x] Protected API: `POST /api/intakes/{id}/vitals` (requires NURSE role)
+- [x] Logout button in nurse portal header
+- [x] Display logged-in user name in header
+
+### 9.5) Doctor Portal Flow (Protected)
+
+- [x] Create doctor login page (`/doctor/login`)
+- [x] Auth check in doctor.js - redirects to login if not authenticated
+- [x] Protected API: `GET /api/intakes/{id}` (requires NURSE or DOCTOR role)
+- [x] Protected API: `POST /api/intakes/{id}/decision` (requires DOCTOR role)
+- [x] Logout button in doctor portal header
+- [x] Display logged-in user name in header
+
+- [ ] Create doctor note endpoint: `POST /doctor/submission/{id}/note`
+  - Save note with `entered_by_doctor_id`
+  - Include decision field
+
+- [ ] Create decision endpoint: `POST /doctor/submission/{id}/decision`
+  - Update `status` to `DONE`
+  - Record decision (ADMIT, DISCHARGE, etc.)
+
+### 9.6) Security Checklist (Must-Do)
+
+- [ ] ✅ Hash all passwords (bcrypt via `passlib[bcrypt]`)
+- [ ] ✅ JWT authentication for Nurse/Doctor routes
+- [ ] ✅ Role checks: nurse routes reject doctors and vice versa
+- [ ] ✅ Ownership checks: verify user is assigned before returning data
+- [ ] ✅ No patient data in guessable URLs without auth
+- [ ] ✅ Rate limit login attempts (basic anti-bruteforce)
+- [ ] ✅ HTTPS in production (not localhost)
+- [ ] ⭐ Audit log (optional): record who viewed/edited/forwarded + timestamp
+
+### 9.7) Frontend Updates
+
+- [ ] Add login pages for nurse and doctor portals
+- [ ] Store JWT token in sessionStorage (or HttpOnly cookie)
+- [ ] Add Authorization header to all protected API calls
+- [ ] Redirect to login if 401 Unauthorized
+- [ ] Show logged-in user info in header
+- [ ] Add logout button
+
+### 9.8) Seed Data for Demo
+
+- [ ] Create seed script with demo users:
+  ```
+  NURSE-1001 / nurse123 (Nurse Jane)
+  NURSE-1002 / nurse123 (Nurse Mike)
+  DOC-2001 / doctor123 (Dr. Smith)
+  DOC-2002 / doctor123 (Dr. Patel)
+  ```
+- [ ] Create demo patient submissions assigned to demo users
+
+---
+
+## Implementation Priority Order
+
+1. **Phase 1: Auth Foundation**
+   - [ ] `users` table + User model
+   - [ ] Password hashing utilities
+   - [ ] Login endpoint + JWT generation
+   - [ ] `get_current_user` dependency
+
+2. **Phase 2: Protected Routes**
+   - [ ] Role-based route guards
+   - [ ] Update nurse routes with auth
+   - [ ] Update doctor routes with auth
+   - [ ] Ownership verification
+
+3. **Phase 3: Assignment System**
+   - [ ] `case_assignments` table
+   - [ ] Auto-assign logic
+   - [ ] Forward-to-doctor flow
+
+4. **Phase 4: Frontend Auth**
+   - [ ] Login pages
+   - [ ] Token storage
+   - [ ] Auth headers in fetch calls
+   - [ ] Logout functionality
+
+5. **Phase 5: Polish**
+   - [ ] Rate limiting
+   - [ ] Audit logging
+   - [ ] Error handling
+   - [ ] Demo seed data

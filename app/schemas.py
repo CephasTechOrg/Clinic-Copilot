@@ -34,3 +34,42 @@ class VitalsCreate(BaseModel):
 class DecisionUpdate(BaseModel):
     decision: str = Field(pattern="^(ADMIT|NOT_ADMIT|PENDING)$")
     doctor_note: str = Field(default="", max_length=5000)
+
+
+# =============================================================================
+# Auth Schemas
+# =============================================================================
+
+class LoginRequest(BaseModel):
+    """Request body for staff login."""
+    staff_id: str = Field(min_length=1, max_length=50)
+    password: str = Field(min_length=1, max_length=100)
+
+
+class TokenResponse(BaseModel):
+    """Response after successful login."""
+    access_token: str
+    token_type: str = "bearer"
+    staff_id: str
+    role: str
+    full_name: str
+
+
+class UserInfo(BaseModel):
+    """Public user information (no password)."""
+    id: int
+    staff_id: str
+    role: str
+    full_name: str
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class UserCreate(BaseModel):
+    """Schema for creating a new user (admin use)."""
+    staff_id: str = Field(min_length=1, max_length=50)
+    password: str = Field(min_length=6, max_length=100)
+    role: str = Field(pattern="^(NURSE|DOCTOR)$")
+    full_name: str = Field(min_length=1, max_length=120)

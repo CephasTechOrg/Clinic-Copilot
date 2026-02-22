@@ -1,6 +1,34 @@
 (function () {
-  // API Base URL - allows file to work when opened directly
-  const API_BASE = "http://localhost:8000";
+  // API Base URL - auto-detect from current location
+  const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
+    ? 'http://localhost:8000' 
+    : window.location.origin;
+  const LOGIN_URL = "/doctor/login";
+  
+  console.log('[Doctor.js] Script loaded');
+  
+  // Check authentication
+  if (typeof AUTH !== 'undefined') {
+    if (!AUTH.requireRole('DOCTOR', LOGIN_URL)) {
+      return; // Will redirect to login
+    }
+    console.log('[Doctor.js] Authenticated as:', AUTH.getUser()?.full_name);
+    
+    // Display user name in header
+    const userNameEl = document.getElementById('user-name');
+    if (userNameEl && AUTH.getUser()) {
+      userNameEl.textContent = AUTH.getUser().full_name || AUTH.getUser().staff_id;
+    }
+  }
+  
+  // Helper to get auth headers
+  const getHeaders = () => {
+    const headers = { "Content-Type": "application/json" };
+    if (typeof AUTH !== 'undefined' && AUTH.getToken()) {
+      headers["Authorization"] = `Bearer ${AUTH.getToken()}`;
+    }
+    return headers;
+  };
   
   const queue = document.getElementById("doctor-queue");
   const queueEmpty = document.getElementById("doctor-queue-empty");
@@ -199,7 +227,14 @@
   };
 
   const loadCase = async (id) => {
-    const res = await fetch(API_BASE + `/api/intakes/${encodeURIComponent(id)}`);
+    const res = await fetch(API_BASE + `/api/intakes/${encodeURIComponent(id)}`, {
+      headers: getHeaders()
+    });
+    if (res.status === 401) {
+      console.log('[Doctor.js] 401 - redirecting to login');
+      if (typeof AUTH !== 'undefined') AUTH.logout();
+      return;
+    }
     if (!res.ok) throw new Error("Failed to load case");
     const data = await res.json();
     updateDetails(data);
@@ -208,7 +243,14 @@
   };
 
   const loadQueue = async () => {
-    const res = await fetch(API_BASE + "/api/intakes");
+    const res = await fetch(API_BASE + "/api/intakes", {
+      headers: getHeaders()
+    });
+    if (res.status === 401) {
+      console.log('[Doctor.js] 401 - redirecting to login');
+      if (typeof AUTH !== 'undefined') AUTH.logout();
+      return;
+    }
     const data = await res.json();
     const items = Array.isArray(data) ? data : data.items || [];
     const ready = items.filter((i) => i.has_summary);
@@ -248,12 +290,17 @@
     try {
       const res = await fetch(API_BASE + `/api/intakes/${currentIntakeId}/decision`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify({
           decision,
           doctor_note: doctorNote ? doctorNote.value : "",
         }),
       });
+      if (res.status === 401) {
+        console.log('[Doctor.js] 401 - redirecting to login');
+        if (typeof AUTH !== 'undefined') AUTH.logout();
+        return;
+      }
       if (!res.ok) {
         const msg = await res.text();
         throw new Error(msg || "Decision failed");

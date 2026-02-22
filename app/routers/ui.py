@@ -25,6 +25,16 @@ def nurse_ui():
     return _file_response("nurse.html")
 
 
+@router.get("/nurse/login")
+def nurse_login_ui():
+    return _file_response("nurse_login.html")
+
+
 @router.get("/doctor")
 def doctor_ui():
     return _file_response("doctor.html")
+
+
+@router.get("/doctor/login")
+def doctor_login_ui():
+    return _file_response("doctor_login.html")

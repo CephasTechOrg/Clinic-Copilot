@@ -4,11 +4,27 @@ models.py
 - Keeps data structure consistent and simple.
 """
 
-from sqlalchemy import String, Integer, DateTime, Text, ForeignKey
+from sqlalchemy import String, Integer, DateTime, Text, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
 from .db import Base
+
+
+class User(Base):
+    """
+    Staff users (nurses and doctors) for authentication.
+    Patients do not have accounts - they submit forms publicly.
+    """
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    staff_id: Mapped[str] = mapped_column(String(50), unique=True, index=True)  # e.g., NURSE-1001, DOC-2001
+    password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(20))  # NURSE or DOCTOR
+    full_name: Mapped[str] = mapped_column(String(120))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class PatientIntake(Base):

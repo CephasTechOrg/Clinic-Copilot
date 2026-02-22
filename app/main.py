@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import engine, Base
 from .paths import STATIC_DIR
 from .routers import api, ui
+from .routers.auth_router import router as auth_router
 
 app = FastAPI(title="Clinic Co-Pilot", version="0.1.0")
 
@@ -28,6 +29,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Routers
+app.include_router(auth_router)  # Auth routes: /auth/login, /auth/me
 app.include_router(api.router)
 app.include_router(ui.router)
 
