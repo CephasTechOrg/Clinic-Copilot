@@ -1,1 +1,1 @@
-from . import patient, provider, doctor
+from . import api, ui

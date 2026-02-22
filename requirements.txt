@@ -1,8 +1,6 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 SQLAlchemy==2.0.34
-Jinja2==3.1.4
-python-multipart==0.0.9
 pydantic==2.8.2
 python-dotenv==1.0.1
 google-generativeai==0.7.2

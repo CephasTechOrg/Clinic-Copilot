@@ -29,3 +29,8 @@ class VitalsCreate(BaseModel):
     spo2: int = Field(ge=0, le=100)
     systolic_bp: int = Field(ge=0, le=300)
     diastolic_bp: int = Field(ge=0, le=200)
+
+
+class DecisionUpdate(BaseModel):
+    decision: str
+    doctor_note: str = ""

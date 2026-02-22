@@ -1,7 +1,7 @@
 """
 main.py
 - FastAPI app entry point.
-- Registers routers and sets up templates/static.
+- Registers API + UI routers and static assets.
 - Creates tables on startup for hackathon convenience.
 """
 
@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import engine, Base
 from .paths import STATIC_DIR
-from .routers import patient, provider, doctor
+from .routers import api, ui
 
 app = FastAPI(title="Clinic Co-Pilot", version="0.1.0")
 
@@ -18,9 +18,8 @@ app = FastAPI(title="Clinic Co-Pilot", version="0.1.0")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Routers
-app.include_router(patient.router)
-app.include_router(provider.router)
-app.include_router(doctor.router)
+app.include_router(api.router)
+app.include_router(ui.router)
 
 
 @app.on_event("startup")
@@ -32,10 +31,3 @@ def on_startup():
     Base.metadata.create_all(bind=engine)
 
 
-@app.get("/")
-def root():
-    """
-    Simple landing redirect:
-    For demo you can add a nicer landing page later.
-    """
-    return {"message": "Clinic Co-Pilot running. Go to /patient/intake"}

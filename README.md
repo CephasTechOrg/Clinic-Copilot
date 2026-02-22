@@ -30,15 +30,15 @@ Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity - fa
 ## Tech Stack
 
 - FastAPI (backend)
-- HTML/CSS templates (simple dashboards)
+- HTML/CSS/JS (modern dashboards)
 - SQLite (local DB)
 - AI layer via prompt + structured JSON output
 
 ## Repo Structure
 
-- `app/routers/` role-based routes (patient / provider / doctor)
-- `templates/` simple dashboards
-- `static/` shared styles
+- `app/routers/` API + UI routes
+- `user_interface/` static HTML pages (patient / nurse / doctor)
+- `static/js/` page scripts
 - `app/prompts/` prompts used by the AI summarizer
 - `app/services/` AI service + optional rules engine
 - `docs/` pitch + architecture
