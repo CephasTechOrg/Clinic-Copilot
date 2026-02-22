@@ -2,11 +2,32 @@
 
 Clinic Co-Pilot is a lightweight AI-powered clinical intake + decision-support assistant designed to reduce wait-time friction and prevent critical details from being overlooked during rushed patient encounters.
 
+**At a glance:** a calmer, safer patient journey — from first symptom to final decision — built for busy clinics and real human stress. We make sure no one is missed, no signal is lost, and every provider has the clearest next step.
+
+![Clinic Co-Pilot hero](static/image/hero.png)
+
 ## Pitch
 
 - Full pitch: `docs/pitch.md`
 - Quick pitch: `pitch.md`
 - Pages & routes: `page.md`
+
+## Product Walkthrough (Screens)
+
+**Page 1 — Landing Page**  
+Welcomes patients to the hospital system, sets trust, and routes them to the right intake flow with clarity and empathy.
+
+![Landing page](static/image/page1.jpeg)
+
+**Page 2 — Doctor Dashboard**  
+Summarizes the case, highlights red flags, and supports structured clinical decisions with a clean, low-friction workflow.
+
+![Doctor dashboard](static/image/page2.jpeg)
+
+**Page 3 — Healthcare Provider (Nurse) Portal**  
+Captures vitals and completes intake handoff, ensuring structured data reaches the doctor without delays.
+
+![Healthcare provider portal](static/image/page3.jpeg)
 
 ## What It Does
 
