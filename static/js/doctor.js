@@ -260,20 +260,38 @@
     return date ? date.getTime() : 0;
   };
 
-  const buildTranslationPayload = (data) => ({
-    chief_complaint: data?.chief_complaint || "",
-    symptoms: data?.symptoms || "",
-    duration: data?.duration || "",
-    severity: data?.severity || "",
-    history: data?.history || "None reported",
-    medications: data?.medications || "None reported",
-    allergies: data?.allergies || "None reported",
-    short_summary: data?.clinical_summary?.short_summary || "",
-    red_flags: data?.clinical_summary?.red_flags || [],
-    differential: data?.clinical_summary?.differential || [],
-    recommended_questions: data?.clinical_summary?.recommended_questions || [],
-    recommended_next_steps: data?.clinical_summary?.recommended_next_steps || [],
-  });
+  const hasOriginalIntake = (data) => {
+    if (!data) return false;
+    const pref = (data.preferred_language || "en").toLowerCase();
+    if (pref === "en") return false;
+    return Boolean(
+      data.chief_complaint_original ||
+        data.symptoms_original ||
+        data.duration_original ||
+        data.history_original ||
+        data.medications_original ||
+        data.allergies_original
+    );
+  };
+
+  const buildTranslationPayload = (data, lang) => {
+    const pref = (data?.preferred_language || "en").toLowerCase();
+    const useOriginal = lang === pref && hasOriginalIntake(data);
+    return {
+      chief_complaint: useOriginal ? (data?.chief_complaint_original || data?.chief_complaint || "") : (data?.chief_complaint || ""),
+      symptoms: useOriginal ? (data?.symptoms_original || data?.symptoms || "") : (data?.symptoms || ""),
+      duration: useOriginal ? (data?.duration_original || data?.duration || "") : (data?.duration || ""),
+      severity: data?.severity || "",
+      history: useOriginal ? (data?.history_original || data?.history || "None reported") : (data?.history || "None reported"),
+      medications: useOriginal ? (data?.medications_original || data?.medications || "None reported") : (data?.medications || "None reported"),
+      allergies: useOriginal ? (data?.allergies_original || data?.allergies || "None reported") : (data?.allergies || "None reported"),
+      short_summary: data?.clinical_summary?.short_summary || "",
+      red_flags: data?.clinical_summary?.red_flags || [],
+      differential: data?.clinical_summary?.differential || [],
+      recommended_questions: data?.clinical_summary?.recommended_questions || [],
+      recommended_next_steps: data?.clinical_summary?.recommended_next_steps || [],
+    };
+  };
 
   const applyTranslatedFields = (fields) => {
     if (!fields) return;
@@ -313,7 +331,7 @@
     if (!currentIntakeData) return;
     currentViewLanguage = lang;
 
-    const baseFields = buildTranslationPayload(currentIntakeData);
+    const baseFields = buildTranslationPayload(currentIntakeData, lang);
     applyTranslatedFields(baseFields);
     if (lang === "en") {
       return;

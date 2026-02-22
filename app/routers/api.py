@@ -8,6 +8,7 @@ import os
 from typing import Any
 import json
 import hashlib
+from pathlib import Path
 from dotenv import load_dotenv
 
 from ..db import get_db
@@ -25,7 +26,8 @@ from ..services.ai import (
 )
 from ..auth import require_nurse, require_doctor, require_staff
 
-load_dotenv(override=True)
+_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(dotenv_path=_ENV_PATH, override=True)
 
 logger = logging.getLogger(__name__)
 

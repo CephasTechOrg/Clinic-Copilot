@@ -6,6 +6,7 @@ Clinic Co-Pilot is a lightweight AI-powered clinical intake + decision-support a
 
 - Full pitch: `docs/pitch.md`
 - Quick pitch: `pitch.md`
+- Pages & routes: `page.md`
 
 ## What It Does
 
@@ -19,13 +20,14 @@ Clinic Co-Pilot is a lightweight AI-powered clinical intake + decision-support a
 ### 2) Provider Vitals
 
 - Health provider enters vitals (HR, RR, Temp, SpO2, BP, etc.)
+- AI summary is generated from symptoms + vitals (with rule-based fallback)
 
 ### 3) Doctor Dashboard
 
-- Doctor receives a clean clinical summary generated from symptoms + vitals
-- AI flags red alerts and suggests next questions/tests
-- Doctor can edit notes and decide Admit / Not Admit
-- Decisions saved to SQLite
+- Doctor receives AI summary, red flags, and recommended questions/steps
+- Workflow status tracking: Pending / Admitted / Approved / Delayed
+- Decisions are saved with timestamps
+- Doctor can translate clinical text into 5 supported languages
 
 ## Why It Matters
 
@@ -38,6 +40,7 @@ Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity - fa
 - HTML/CSS/JS (modern dashboards)
 - SQLite (local DB)
 - AI layer via prompt + structured JSON output
+- Gemini translation for doctor language switching
 
 ## Project Structure
 
@@ -65,6 +68,8 @@ Seed the database with demo patients:
 curl -X POST http://localhost:8000/api/seed-demo-data
 ```
 
+Note: demo seed endpoints require `ALLOW_DEMO_SEED=true` in `.env`.
+
 ### API Endpoints
 
 - `GET /api/health` - Health check
@@ -72,7 +77,11 @@ curl -X POST http://localhost:8000/api/seed-demo-data
 - `POST /api/intakes` - Create new intake
 - `POST /api/intakes/{id}/vitals` - Submit vitals + generate AI summary
 - `POST /api/intakes/{id}/decision` - Save doctor decision
+- `POST /api/translate` - Translate clinical text for doctor view
 - `POST /api/seed-demo-data` - Load demo patients
+- `POST /api/seed-demo-users` - Preload staff IDs for controlled registration
+- `POST /auth/register` - Activate staff account (requires preloaded ID)
+- `POST /auth/login` - Staff login
 
 ## Demo Script (Quick)
 
@@ -81,6 +90,11 @@ curl -X POST http://localhost:8000/api/seed-demo-data
 3. Doctor sees summary + priority + red flags
 4. Doctor edits note and submits decision
 5. Saved record appears in history
+
+## Notes
+
+- If Gemini quota is exhausted, the system falls back to rule-based summaries and original language.
+- For a clean demo, delete `clinic_copilot.db` and restart `uvicorn`.
 
 ## Disclaimer
 
