@@ -26,6 +26,11 @@ Summarizes the case, highlights red flags, and supports structured clinical deci
 
 ![Doctor dashboard](static/image/page2.jpeg)
 
+**Page 5 — AI Summary View**  
+Shows the clinician-ready AI brief with priority, red flags, and recommended next steps for fast decisions.
+
+![AI summary view](static/image/page5.jpeg)
+
 **Page 3 — Healthcare Provider (Nurse) Portal**  
 Captures vitals and completes intake handoff, ensuring structured data reaches the doctor without delays.
 
