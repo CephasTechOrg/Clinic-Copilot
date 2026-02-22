@@ -37,7 +37,8 @@ Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity - fa
 ## Repo Structure
 
 - `app/routers/` role-based routes (patient / provider / doctor)
-- `app/templates/` simple dashboards
+- `templates/` simple dashboards
+- `static/` shared styles
 - `app/prompts/` prompts used by the AI summarizer
 - `app/services/` AI service + optional rules engine
 - `docs/` pitch + architecture

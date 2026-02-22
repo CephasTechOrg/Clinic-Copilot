@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Clinic Co-Pilot</title>
-    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="stylesheet" href="/static/css/base.css" />
+    {% block page_styles %}{% endblock %}
   </head>
-  <body>
+  <body class="{% block body_class %}{% endblock %}">
     <header class="topbar">
       <div class="brand">Clinic Co-Pilot</div>
       <nav class="nav">

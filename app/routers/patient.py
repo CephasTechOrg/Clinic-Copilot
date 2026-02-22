@@ -9,11 +9,12 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..paths import TEMPLATES_DIR
 from ..models import PatientIntake
 from fastapi import Depends
 
 router = APIRouter(prefix="/patient", tags=["patient"])
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @router.get("/intake")

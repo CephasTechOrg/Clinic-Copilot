@@ -10,10 +10,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from ..db import get_db
+from ..paths import TEMPLATES_DIR
 from ..models import PatientIntake, ClinicalSummary
 
 router = APIRouter(prefix="/doctor", tags=["doctor"])
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @router.get("/dashboard")

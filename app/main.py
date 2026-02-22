@@ -9,12 +9,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from .db import engine, Base
+from .paths import STATIC_DIR
 from .routers import patient, provider, doctor
 
 app = FastAPI(title="Clinic Co-Pilot", version="0.1.0")
 
 # Static files (CSS)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Routers
 app.include_router(patient.router)

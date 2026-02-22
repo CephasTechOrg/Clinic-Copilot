@@ -66,6 +66,14 @@ def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
         }
         if not required_keys.issubset(parsed):
             raise ValueError("Gemini response missing required keys")
+        list_keys = [
+            "red_flags",
+            "differential_considerations",
+            "recommended_questions",
+            "recommended_next_steps",
+        ]
+        if not all(isinstance(parsed.get(k), list) for k in list_keys):
+            raise ValueError("Gemini response has invalid list fields")
 
         return parsed
 

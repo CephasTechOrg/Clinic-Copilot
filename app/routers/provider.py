@@ -10,11 +10,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from ..db import get_db
+from ..paths import TEMPLATES_DIR
 from ..models import PatientIntake, VitalsEntry, ClinicalSummary
 from ..services.ai import generate_clinical_summary
 
 router = APIRouter(prefix="/provider", tags=["provider"])
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @router.get("/queue")
@@ -114,4 +115,4 @@ def submit_vitals(
     db.add(summary)
     db.commit()
 
-    return RedirectResponse(url="/doctor/dashboard", status_code=303)
+    return RedirectResponse(url=f"/doctor/case/{intake_id}", status_code=303)
