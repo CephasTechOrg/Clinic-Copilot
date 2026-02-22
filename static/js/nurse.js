@@ -3,7 +3,7 @@
   const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
     ? 'http://localhost:8000' 
     : window.location.origin;
-  const LOGIN_URL = "/nurse/login";
+  const LOGIN_URL = (window.location.protocol === 'file:') ? 'nurse_login.html' : "/nurse/login";
   
   console.log('[Nurse.js] Script loaded');
   
@@ -94,7 +94,7 @@
                   <h3 class="font-bold text-slate-800 truncate">${i.full_name}</h3>
                   <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass(priority)} uppercase flex-shrink-0">${priority}</span>
                 </div>
-                <p class="text-sm text-slate-600 mt-0.5">${i.age} years old • ${i.sex || 'N/A'}</p>
+                <p class="text-sm text-slate-600 mt-0.5">${i.age} years old - ${i.sex || 'N/A'}</p>
                 <p class="text-xs text-slate-500 mt-1 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
                 <div class="flex items-center gap-2 mt-2">
                   <span class="material-symbols-outlined text-slate-400 text-xs">schedule</span>

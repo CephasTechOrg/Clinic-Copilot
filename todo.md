@@ -17,6 +17,16 @@
 - [x] Visual priority badges spec (LOW/MED/HIGH with colors)
 - [ ] Optional "Risk Meter / Gauge" widget (extra demo wow)
 
+## Review Findings (Immediate)
+
+- [x] Replace default JWT secret with required env var (fail fast if missing)
+- [x] Protect or remove demo seed endpoints (`/api/seed-demo-data`, `/api/seed-demo-users`)
+- [x] Doctor queue: filter to `PENDING_DOCTOR` (exclude completed cases)
+- [x] Remove or implement `/nurse/register` and `/doctor/register` routes + links
+- [x] Fix mojibake/encoding artifacts in UI and seed data (e.g., `Â°C`, `â€¢`, `â†`)
+- [x] Allow committing `.env.example` by removing it from `.gitignore`
+- [ ] Add at least a basic smoke test (currently empty)
+
 ## 3) Project Structure
 
 - [x] Clean folder structure (FastAPI + templates + static + services + routers + prompts + docs)

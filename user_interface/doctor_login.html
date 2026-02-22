@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Doctor Login - Clinic Co-Pilot</title>
+    <script>
+      (function() {
+        const isFile = window.location.protocol === 'file:';
+        const baseDir = isFile ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        window.APP_PATHS = {
+          isFile,
+          baseDir,
+          patient: isFile ? baseDir + 'patient.html' : '/patient',
+          doctor: isFile ? baseDir + 'doctor.html' : '/doctor',
+          doctorLogin: isFile ? baseDir + 'doctor_login.html' : '/doctor/login',
+        };
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
@@ -68,7 +81,7 @@
                 type="password" 
                 id="password" 
                 name="password" 
-                placeholder="••••••••"
+                placeholder="********"
                 required
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
               />
@@ -100,23 +113,43 @@
           </div>
         </div>
 
+        <!-- Create Account -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-slate-500">New staff member?</span>
+          </div>
+        </div>
+        <a href="/doctor/register" class="block w-full py-3 px-4 text-center text-indigo-600 font-medium border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors">
+          <span class="inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">person_add</span>
+            Create Account
+          </span>
+        </a>
+
         <!-- Back link -->
         <div class="mt-6 text-center">
-          <a href="/patient" class="text-sm text-slate-500 hover:text-indigo-600 transition-colors">
-            ← Back to Patient Portal
+          <a id="back-to-patient" href="/patient" class="text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+            <- Back to Patient Portal
           </a>
         </div>
       </div>
     </div>
 
     <!-- Auth JS -->
-    <script src="/static/js/auth.js"></script>
+    <script src="../static/js/auth.js"></script>
     <script>
+      // Normalize links for file:// use
+      const backLink = document.getElementById('back-to-patient');
+      if (backLink && window.APP_PATHS) backLink.href = window.APP_PATHS.patient;
+
       // Check if already logged in
       if (AUTH.isAuthenticated()) {
         const user = AUTH.getUser();
         if (user && user.role === 'DOCTOR') {
-          window.location.href = '/doctor';
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.doctor : '/doctor';
         }
       }
 
@@ -149,7 +182,7 @@
           }
           
           // Redirect to doctor dashboard
-          window.location.href = '/doctor';
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.doctor : '/doctor';
         } else {
           errorMsg.textContent = result.error;
           errorDiv.classList.remove('hidden');

@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nurse Login - Clinic Co-Pilot</title>
+    <script>
+      (function() {
+        const isFile = window.location.protocol === 'file:';
+        const baseDir = isFile ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        window.APP_PATHS = {
+          isFile,
+          baseDir,
+          patient: isFile ? baseDir + 'patient.html' : '/patient',
+          nurse: isFile ? baseDir + 'nurse.html' : '/nurse',
+          nurseLogin: isFile ? baseDir + 'nurse_login.html' : '/nurse/login',
+        };
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
@@ -68,7 +81,7 @@
                 type="password" 
                 id="password" 
                 name="password" 
-                placeholder="••••••••"
+                placeholder="********"
                 required
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
               />
@@ -102,21 +115,25 @@
 
         <!-- Back link -->
         <div class="mt-6 text-center">
-          <a href="/patient" class="text-sm text-slate-500 hover:text-teal-600 transition-colors">
-            ← Back to Patient Portal
+          <a id="back-to-patient" href="/patient" class="text-sm text-slate-500 hover:text-teal-600 transition-colors">
+            <- Back to Patient Portal
           </a>
         </div>
       </div>
     </div>
 
     <!-- Auth JS -->
-    <script src="/static/js/auth.js"></script>
+    <script src="../static/js/auth.js"></script>
     <script>
+      // Normalize links for file:// use
+      const backLink = document.getElementById('back-to-patient');
+      if (backLink && window.APP_PATHS) backLink.href = window.APP_PATHS.patient;
+
       // Check if already logged in
       if (AUTH.isAuthenticated()) {
         const user = AUTH.getUser();
         if (user && user.role === 'NURSE') {
-          window.location.href = '/nurse';
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.nurse : '/nurse';
         }
       }
 
@@ -149,7 +166,7 @@
           }
           
           // Redirect to nurse dashboard
-          window.location.href = '/nurse';
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.nurse : '/nurse';
         } else {
           errorMsg.textContent = result.error;
           errorDiv.classList.remove('hidden');

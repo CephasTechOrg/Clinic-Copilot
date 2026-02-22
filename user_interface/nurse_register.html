@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nurse Registration - Clinic Co-Pilot</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); }
+      .gradient-teal { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 flex items-center justify-center p-4">
+    
+    <div class="w-full max-w-md">
+      <!-- Logo -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-teal shadow-lg mb-4">
+          <span class="material-symbols-outlined text-white text-3xl">vital_signs</span>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800">Nurse Registration</h1>
+        <p class="text-slate-500 mt-1">Create your nursing staff account</p>
+      </div>
+
+      <!-- Registration Card -->
+      <div class="glass rounded-2xl shadow-xl p-8 border border-white/50">
+        <!-- Error Message -->
+        <div id="register-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <p id="error-message" class="text-sm text-red-600 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">error</span>
+            <span></span>
+          </p>
+        </div>
+
+        <!-- Success Message -->
+        <div id="register-success" class="hidden mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <p class="text-sm text-emerald-600 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">check_circle</span>
+            <span>Account created! Redirecting to login...</span>
+          </p>
+        </div>
+
+        <form id="register-form" class="space-y-4">
+          <!-- Full Name -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person</span>
+              <input 
+                type="text" 
+                id="full_name" 
+                required
+                minlength="2"
+                maxlength="120"
+                placeholder="Jane Smith"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all"
+              />
+            </div>
+          </div>
+
+          <!-- Staff ID -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Staff ID</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">badge</span>
+              <input 
+                type="text" 
+                id="staff_id" 
+                required
+                pattern="NURSE-\d{4,6}"
+                placeholder="NURSE-1001"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all uppercase"
+              />
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Format: NURSE-XXXX (e.g., NURSE-1001)</p>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
+              <input 
+                type="password" 
+                id="password" 
+                required
+                minlength="6"
+                placeholder="********"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all"
+              />
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
+              <input 
+                type="password" 
+                id="confirm_password" 
+                required
+                minlength="6"
+                placeholder="********"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all"
+              />
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            id="register-btn"
+            class="w-full py-3 px-4 gradient-teal text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+          >
+            <span class="material-symbols-outlined">person_add</span>
+            Create Account
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-slate-500">Already have an account?</span>
+          </div>
+        </div>
+
+        <!-- Login Link -->
+        <a href="/nurse/login" class="block w-full py-3 px-4 text-center text-teal-600 font-medium border border-teal-200 rounded-xl hover:bg-teal-50 transition-colors">
+          Sign In Instead
+        </a>
+      </div>
+
+      <!-- Back link -->
+      <div class="mt-6 text-center">
+        <a href="/patient" class="text-sm text-slate-500 hover:text-teal-600 transition-colors">
+          <- Back to Patient Portal
+        </a>
+      </div>
+    </div>
+
+    <!-- Auth JS -->
+    <script src="../static/js/auth.js"></script>
+    <script>
+      // If already logged in as nurse, redirect to portal
+      if (AUTH.isAuthenticated()) {
+        const user = AUTH.getUser();
+        if (user && user.role === 'NURSE') {
+          window.location.href = '/nurse';
+        }
+      }
+
+      const form = document.getElementById('register-form');
+      const errorDiv = document.getElementById('register-error');
+      const errorMsg = document.getElementById('error-message').querySelector('span');
+      const successDiv = document.getElementById('register-success');
+      const registerBtn = document.getElementById('register-btn');
+
+      // Auto-uppercase staff ID
+      document.getElementById('staff_id').addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase();
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Creating Account...';
+
+        const fullName = document.getElementById('full_name').value.trim();
+        const staffId = document.getElementById('staff_id').value.trim().toUpperCase();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        // Validate staff ID format
+        if (!/^NURSE-\d{4,6}$/.test(staffId)) {
+          errorMsg.textContent = 'Staff ID must be in format NURSE-XXXX (e.g., NURSE-1001)';
+          errorDiv.classList.remove('hidden');
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '<span class="material-symbols-outlined">person_add</span> Create Account';
+          return;
+        }
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          errorMsg.textContent = 'Passwords do not match';
+          errorDiv.classList.remove('hidden');
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '<span class="material-symbols-outlined">person_add</span> Create Account';
+          return;
+        }
+
+        try {
+          const response = await fetch(`${AUTH.API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              staff_id: staffId,
+              password: password,
+              confirm_password: confirmPassword,
+              full_name: fullName
+            })
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Registration failed');
+          }
+
+          // Success - show message and redirect
+          successDiv.classList.remove('hidden');
+          setTimeout(() => {
+            window.location.href = '/nurse/login';
+          }, 2000);
+
+        } catch (err) {
+          errorMsg.textContent = err.message;
+          errorDiv.classList.remove('hidden');
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '<span class="material-symbols-outlined">person_add</span> Create Account';
+        }
+      });
+    </script>
+  </body>
+</html>

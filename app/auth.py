@@ -14,6 +14,7 @@ from jose import JWTError, jwt
 import bcrypt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
 
 from .db import get_db
 from .models import User
@@ -22,8 +23,13 @@ from .models import User
 # Configuration
 # =============================================================================
 
-# Secret key for JWT - in production, use a strong random key from environment
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "clinic-copilot-secret-key-change-in-production")
+# Load .env to allow local development without exporting env vars
+load_dotenv()
+
+# Secret key for JWT - required in all environments
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY is required. Set it in the environment or .env")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hours
 

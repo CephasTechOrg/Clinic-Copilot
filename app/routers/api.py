@@ -2,12 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 import os
+from dotenv import load_dotenv
 
 from ..db import get_db
 from ..models import PatientIntake, VitalsEntry, ClinicalSummary, User
 from ..schemas import IntakeCreate, VitalsCreate, DecisionUpdate
 from ..services.ai import generate_clinical_summary
 from ..auth import require_nurse, require_doctor, require_staff
+
+load_dotenv()
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -81,6 +84,10 @@ def _intake_to_dict(intake: PatientIntake) -> dict:
         if intake.vitals
         else None,
     }
+
+def _demo_seed_allowed() -> bool:
+    value = os.getenv("ALLOW_DEMO_SEED", "")
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 @router.get("/intakes")
@@ -199,6 +206,9 @@ def seed_demo_data(db: Session = Depends(get_db)):
     """
     Seeds the database with demo patient data for testing/demo purposes.
     """
+    if not _demo_seed_allowed():
+        raise HTTPException(status_code=404, detail="Not found")
+
     demo_patients = [
         {
             "full_name": "John Anderson",
@@ -232,7 +242,7 @@ def seed_demo_data(db: Session = Depends(get_db)):
             "sex": "Male",
             "address": "789 Pine Road, Wellness City",
             "chief_complaint": "Persistent cough and fever",
-            "symptoms": "Dry cough for 5 days, fever up to 102°F, fatigue, mild shortness of breath with exertion.",
+            "symptoms": "Dry cough for 5 days, fever up to 102 F, fatigue, mild shortness of breath with exertion.",
             "duration": "5 days",
             "severity": "5/10",
             "history": "Asthma",
@@ -260,6 +270,9 @@ def seed_demo_users(db: Session = Depends(get_db)):
     
     WARNING: Demo endpoint - remove in production!
     """
+    if not _demo_seed_allowed():
+        raise HTTPException(status_code=404, detail="Not found")
+
     try:
         from ..models import User
         from ..auth import hash_password

@@ -73,3 +73,32 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=6, max_length=100)
     role: str = Field(pattern="^(NURSE|DOCTOR)$")
     full_name: str = Field(min_length=1, max_length=120)
+
+
+class RegisterRequest(BaseModel):
+    """
+    Schema for staff self-registration.
+    Staff ID must follow format:
+    - NURSE-XXXX for nurses (e.g., NURSE-1001)
+    - DOC-XXXX for doctors (e.g., DOC-2001)
+    """
+    staff_id: str = Field(
+        min_length=8, 
+        max_length=20,
+        description="Staff ID in format NURSE-XXXX or DOC-XXXX"
+    )
+    password: str = Field(
+        min_length=6, 
+        max_length=100,
+        description="Password must be at least 6 characters"
+    )
+    confirm_password: str = Field(
+        min_length=6, 
+        max_length=100,
+        description="Must match password"
+    )
+    full_name: str = Field(
+        min_length=2, 
+        max_length=120,
+        description="Your full name"
+    )

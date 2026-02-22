@@ -30,6 +30,8 @@ def nurse_login_ui():
     return _file_response("nurse_login.html")
 
 
+
+
 @router.get("/doctor")
 def doctor_ui():
     return _file_response("doctor.html")
@@ -38,3 +40,4 @@ def doctor_ui():
 @router.get("/doctor/login")
 def doctor_login_ui():
     return _file_response("doctor_login.html")
+

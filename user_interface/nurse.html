@@ -1,9 +1,42 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Provider Dashboard - Clinic Co-Pilot</title>
+    <script>
+      (function() {
+        const isFile = window.location.protocol === 'file:';
+        const baseDir = isFile ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        window.APP_PATHS = {
+          isFile,
+          baseDir,
+          patient: isFile ? baseDir + 'patient.html' : '/patient',
+          nurse: isFile ? baseDir + 'nurse.html' : '/nurse',
+          nurseLogin: isFile ? baseDir + 'nurse_login.html' : '/nurse/login',
+        };
+      })();
+    </script>
+    <!-- Early auth check - redirect immediately if not logged in -->
+    <script>
+      (function() {
+        const token = sessionStorage.getItem('clinic_copilot_token');
+        const userStr = sessionStorage.getItem('clinic_copilot_user');
+        if (!token || !userStr) {
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.nurseLogin : '/nurse/login';
+          return;
+        }
+        try {
+          const user = JSON.parse(userStr);
+          if (user.role !== 'NURSE') {
+            sessionStorage.clear();
+            window.location.href = window.APP_PATHS ? window.APP_PATHS.nurseLogin : '/nurse/login';
+          }
+        } catch(e) {
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.nurseLogin : '/nurse/login';
+        }
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
@@ -105,7 +138,7 @@
                 <span class="material-symbols-outlined text-teal-600 text-lg">person</span>
                 <span id="user-name" class="text-xs font-medium text-slate-600"></span>
               </div>
-              <button onclick="AUTH.logout()" class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <button onclick="AUTH.logout(window.APP_PATHS ? window.APP_PATHS.nurseLogin : '/nurse/login')" class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-sm">logout</span>
                 <span class="hidden sm:inline">Logout</span>
               </button>
@@ -210,10 +243,10 @@
                     </span>
                     Temperature
                   </span>
-                  <span class="text-xs text-slate-400 font-medium">°C</span>
+                  <span class="text-xs text-slate-400 font-medium">&deg;C</span>
                 </label>
                 <input name="temperature_c" required type="number" step="0.1" placeholder="36.6" min="32" max="43" class="w-full text-center" />
-                <p class="text-xs text-slate-400 text-center">Normal: 36.1-37.2 °C</p>
+                <p class="text-xs text-slate-400 text-center">Normal: 36.1-37.2 &deg;C</p>
               </div>
 
               <!-- SpO2 -->
@@ -271,8 +304,8 @@
                 <span>Forward to Doctor</span>
               </button>
               
-              <a href="/patient" class="block text-center text-sm text-slate-500 hover:text-slate-700 font-medium py-2 transition-colors">
-                ← Back to Patient Intake
+              <a id="back-to-patient" href="/patient" class="block text-center text-sm text-slate-500 hover:text-slate-700 font-medium py-2 transition-colors">
+                <- Back to Patient Intake
               </a>
             </div>
           </form>
@@ -349,7 +382,11 @@
         document.getElementById('loading-overlay').classList.remove('flex');
       };
     </script>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/nurse.js?v=6"></script>
+    <script src="../static/js/auth.js"></script>
+    <script src="../static/js/nurse.js?v=6"></script>
+    <script>
+      const backLink = document.getElementById('back-to-patient');
+      if (backLink && window.APP_PATHS) backLink.href = window.APP_PATHS.patient;
+    </script>
   </body>
 </html>

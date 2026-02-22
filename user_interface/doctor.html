@@ -4,6 +4,39 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Doctor Dashboard - Clinic Co-Pilot</title>
+    <script>
+      (function() {
+        const isFile = window.location.protocol === 'file:';
+        const baseDir = isFile ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        window.APP_PATHS = {
+          isFile,
+          baseDir,
+          patient: isFile ? baseDir + 'patient.html' : '/patient',
+          doctor: isFile ? baseDir + 'doctor.html' : '/doctor',
+          doctorLogin: isFile ? baseDir + 'doctor_login.html' : '/doctor/login',
+        };
+      })();
+    </script>
+    <!-- Early auth check - redirect immediately if not logged in -->
+    <script>
+      (function() {
+        const token = sessionStorage.getItem('clinic_copilot_token');
+        const userStr = sessionStorage.getItem('clinic_copilot_user');
+        if (!token || !userStr) {
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login';
+          return;
+        }
+        try {
+          const user = JSON.parse(userStr);
+          if (user.role !== 'DOCTOR') {
+            sessionStorage.clear();
+            window.location.href = window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login';
+          }
+        } catch(e) {
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login';
+        }
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
@@ -141,7 +174,7 @@
                 <span class="material-symbols-outlined text-indigo-600 text-lg">person</span>
                 <span id="user-name" class="text-xs font-medium text-slate-600"></span>
               </div>
-              <button onclick="AUTH.logout()" class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <button onclick="AUTH.logout(window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login')" class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-sm">logout</span>
                 <span class="hidden sm:inline">Logout</span>
               </button>
@@ -434,7 +467,7 @@
         needle.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
       };
     </script>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/doctor.js?v=6"></script>
+    <script src="../static/js/auth.js"></script>
+    <script src="../static/js/doctor.js?v=6"></script>
   </body>
 </html>
