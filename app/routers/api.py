@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+import os
 
 from ..db import get_db
 from ..models import PatientIntake, VitalsEntry, ClinicalSummary
@@ -8,6 +9,22 @@ from ..schemas import IntakeCreate, VitalsCreate, DecisionUpdate
 from ..services.ai import generate_clinical_summary
 
 router = APIRouter(prefix="/api", tags=["api"])
+
+
+@router.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint to verify API and database connectivity."""
+    try:
+        # Test database connection
+        db.execute(select(PatientIntake).limit(1))
+        gemini_configured = bool(os.getenv("GEMINI_API_KEY"))
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "ai_configured": gemini_configured
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service unavailable: {str(e)}")
 
 
 def _split_lines(value: str) -> list[str]:
@@ -28,6 +45,7 @@ def _summary_to_dict(summary: ClinicalSummary | None) -> dict:
         "recommended_next_steps": _split_lines(summary.recommended_next_steps),
         "doctor_note": summary.doctor_note,
         "decision": summary.decision,
+        "created_at": summary.created_at.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
 
@@ -45,6 +63,7 @@ def _intake_to_dict(intake: PatientIntake) -> dict:
         "history": intake.history,
         "medications": intake.medications,
         "allergies": intake.allergies,
+        "workflow_status": getattr(intake, 'workflow_status', 'PENDING_NURSE'),
         "created_at": intake.created_at.strftime("%Y-%m-%d %H:%M"),
         "has_vitals": intake.vitals is not None,
         "has_summary": intake.clinical_summary is not None,
@@ -80,10 +99,11 @@ def get_intake(intake_id: int, db: Session = Depends(get_db)):
 @router.post("/intakes")
 def create_intake(payload: IntakeCreate, db: Session = Depends(get_db)):
     intake = PatientIntake(**payload.model_dump())
+    intake.workflow_status = "PENDING_NURSE"
     db.add(intake)
     db.commit()
     db.refresh(intake)
-    return {"id": intake.id}
+    return {"id": intake.id, "message": "Data successfully submitted to Nurse"}
 
 
 @router.post("/intakes/{intake_id}/vitals")
@@ -138,9 +158,15 @@ def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(g
         decision="PENDING",
     )
     db.add(summary)
+    
+    # Update workflow status to PENDING_DOCTOR
+    intake.workflow_status = "PENDING_DOCTOR"
+    db.add(intake)
     db.commit()
 
-    return _summary_to_dict(summary)
+    result = _summary_to_dict(summary)
+    result["message"] = "Vitals successfully sent to Doctor"
+    return result
 
 
 @router.post("/intakes/{intake_id}/decision")
@@ -153,6 +179,69 @@ def update_decision(intake_id: int, payload: DecisionUpdate, db: Session = Depen
     summary.decision = payload.decision
     summary.doctor_note = payload.doctor_note
     db.add(summary)
+    
+    # Update workflow status to COMPLETED
+    intake.workflow_status = "COMPLETED"
+    db.add(intake)
     db.commit()
 
-    return {"status": "ok"}
+    message = "Patient admitted successfully" if payload.decision == "ADMIT" else "Decision recorded successfully"
+    return {"status": "ok", "message": message}
+
+
+@router.post("/seed-demo-data")
+def seed_demo_data(db: Session = Depends(get_db)):
+    """
+    Seeds the database with demo patient data for testing/demo purposes.
+    """
+    demo_patients = [
+        {
+            "full_name": "John Anderson",
+            "age": 67,
+            "sex": "Male",
+            "address": "123 Oak Street, Medical City",
+            "chief_complaint": "Chest pain and shortness of breath",
+            "symptoms": "Experiencing crushing chest pain radiating to left arm, accompanied by sweating and nausea. Started 2 hours ago.",
+            "duration": "2 hours",
+            "severity": "9/10",
+            "history": "Hypertension, Type 2 Diabetes",
+            "medications": "Metformin 1000mg, Lisinopril 10mg",
+            "allergies": "Penicillin"
+        },
+        {
+            "full_name": "Sarah Martinez",
+            "age": 34,
+            "sex": "Female",
+            "address": "456 Elm Avenue, Health Town",
+            "chief_complaint": "Severe headache with vision changes",
+            "symptoms": "Sudden onset severe headache, blurred vision, sensitivity to light. Never experienced this before.",
+            "duration": "4 hours",
+            "severity": "8/10",
+            "history": "Migraines (occasional)",
+            "medications": "Birth control pills",
+            "allergies": "None"
+        },
+        {
+            "full_name": "Robert Chen",
+            "age": 45,
+            "sex": "Male",
+            "address": "789 Pine Road, Wellness City",
+            "chief_complaint": "Persistent cough and fever",
+            "symptoms": "Dry cough for 5 days, fever up to 102°F, fatigue, mild shortness of breath with exertion.",
+            "duration": "5 days",
+            "severity": "5/10",
+            "history": "Asthma",
+            "medications": "Albuterol inhaler as needed",
+            "allergies": "Sulfa drugs"
+        }
+    ]
+    
+    created_ids = []
+    for patient_data in demo_patients:
+        intake = PatientIntake(**patient_data)
+        db.add(intake)
+        db.commit()
+        db.refresh(intake)
+        created_ids.append(intake.id)
+    
+    return {"status": "success", "created_patients": len(demo_patients), "ids": created_ids}

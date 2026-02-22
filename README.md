@@ -43,11 +43,31 @@ Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity - fa
 - `app/services/` AI service + optional rules engine
 - `docs/` pitch + architecture
 
-## Run Locally (later)
+## Run Locally
 
-1. Create venv
-2. `pip install -r requirements.txt`
-3. `uvicorn app.main:app --reload`
+1. Create venv: `python -m venv venv`
+2. Activate: `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Unix)
+3. Install dependencies: `pip install -r requirements.txt`
+4. Create `.env` file with your Gemini API key: `GEMINI_API_KEY=your-key-here`
+5. Run server: `uvicorn app.main:app --reload`
+6. Open browser: `http://localhost:8000`
+
+### Quick Test with Demo Data
+
+Seed the database with demo patients:
+
+```bash
+curl -X POST http://localhost:8000/api/seed-demo-data
+```
+
+### API Endpoints
+
+- `GET /api/health` - Health check
+- `GET /api/intakes` - List all patient intakes
+- `POST /api/intakes` - Create new intake
+- `POST /api/intakes/{id}/vitals` - Submit vitals + generate AI summary
+- `POST /api/intakes/{id}/decision` - Save doctor decision
+- `POST /api/seed-demo-data` - Load demo patients
 
 ## Demo Script (Quick)
 

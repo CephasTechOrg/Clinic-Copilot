@@ -8,18 +8,18 @@ from pydantic import BaseModel, Field
 
 
 class IntakeCreate(BaseModel):
-    full_name: str
+    full_name: str = Field(min_length=1, max_length=120)
     age: int = Field(ge=0, le=130)
-    sex: str
-    address: str
+    sex: str = Field(max_length=20)
+    address: str = Field(max_length=200)
 
-    chief_complaint: str
-    symptoms: str
-    duration: str
-    severity: str
-    history: str = ""
-    medications: str = ""
-    allergies: str = ""
+    chief_complaint: str = Field(min_length=1, max_length=200)
+    symptoms: str = Field(min_length=1, max_length=2000)
+    duration: str = Field(max_length=80)
+    severity: str = Field(max_length=80)
+    history: str = Field(default="", max_length=2000)
+    medications: str = Field(default="", max_length=2000)
+    allergies: str = Field(default="", max_length=2000)
 
 
 class VitalsCreate(BaseModel):
@@ -32,5 +32,5 @@ class VitalsCreate(BaseModel):
 
 
 class DecisionUpdate(BaseModel):
-    decision: str
-    doctor_note: str = ""
+    decision: str = Field(pattern="^(ADMIT|NOT_ADMIT|PENDING)$")
+    doctor_note: str = Field(default="", max_length=5000)

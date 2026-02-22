@@ -12,7 +12,10 @@ import os
 import json
 from typing import Dict, Any
 from dotenv import load_dotenv
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except ModuleNotFoundError:
+    genai = None
 
 from .triage_rules import rule_based_flags
 
@@ -21,7 +24,7 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if GEMINI_API_KEY:
+if GEMINI_API_KEY and genai:
     genai.configure(api_key=GEMINI_API_KEY)
 
 # Use fast Gemini model (good balance for hackathon)
@@ -37,7 +40,7 @@ def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
 
     try:
-        if not GEMINI_API_KEY:
+        if not GEMINI_API_KEY or not genai:
             raise Exception("No Gemini API key found")
 
         model = genai.GenerativeModel(MODEL_NAME)
@@ -78,7 +81,11 @@ def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
         return parsed
 
     except Exception as e:
-        print("Gemini failed, using fallback:", e)
+        try:
+            print(f"Gemini AI failed: {type(e).__name__}: {e}")
+            print("Falling back to rule-based summary for safety.")
+        except Exception:
+            pass
         return fallback_summary(payload)
 
 

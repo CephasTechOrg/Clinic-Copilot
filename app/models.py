@@ -35,6 +35,9 @@ class PatientIntake(Base):
     medications: Mapped[str] = mapped_column(Text, default="")
     allergies: Mapped[str] = mapped_column(Text, default="")
 
+    # Workflow status: PENDING_NURSE -> PENDING_DOCTOR -> COMPLETED
+    workflow_status: Mapped[str] = mapped_column(String(30), default="PENDING_NURSE")
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     # Relationships

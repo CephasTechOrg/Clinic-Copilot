@@ -1,4 +1,7 @@
 (function () {
+  // API Base URL - allows file to work when opened directly
+  const API_BASE = "http://localhost:8000";
+  
   const queue = document.getElementById("doctor-queue");
   const queueEmpty = document.getElementById("doctor-queue-empty");
   const queueSubtitle = document.getElementById("doctor-queue-subtitle");
@@ -13,6 +16,8 @@
   const differentialList = document.getElementById("differential-list");
   const nextSteps = document.getElementById("next-steps");
   const doctorNote = document.getElementById("doctor-note");
+  const urgencyScore = document.getElementById("urgency-score");
+  const urgencyLabel = document.getElementById("urgency-label");
 
   const decisionAdmit = document.getElementById("decision-admit");
   const decisionDeny = document.getElementById("decision-deny");
@@ -24,63 +29,169 @@
     const norm = (level || "PENDING").toUpperCase();
     if (!priorityPill) return;
     priorityPill.textContent = norm;
-    priorityPill.className =
-      "text-xs font-semibold px-2 py-1 rounded-full " +
-      (norm === "HIGH"
-        ? "bg-red-100 text-red-600"
-        : norm === "MED"
-        ? "bg-amber-100 text-amber-600"
-        : norm === "LOW"
-        ? "bg-emerald-100 text-emerald-600"
-        : "bg-slate-100 text-slate-600");
+    
+    let pillClass = "px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide border ";
+    if (norm === "HIGH") {
+      pillClass += "bg-red-100 text-red-600 border-red-200";
+    } else if (norm === "MED") {
+      pillClass += "bg-amber-100 text-amber-600 border-amber-200";
+    } else if (norm === "LOW") {
+      pillClass += "bg-emerald-100 text-emerald-600 border-emerald-200";
+    } else {
+      pillClass += "bg-slate-100 text-slate-600 border-slate-200";
+    }
+    priorityPill.className = pillClass;
+
+    // Update risk gauge
+    let score = 0;
+    let label = "PENDING";
+    let labelColor = "text-slate-500";
+    
+    if (norm === "HIGH") {
+      score = 85;
+      label = "CRITICAL";
+      labelColor = "text-red-600";
+    } else if (norm === "MED") {
+      score = 55;
+      label = "MODERATE";
+      labelColor = "text-amber-600";
+    } else if (norm === "LOW") {
+      score = 25;
+      label = "LOW RISK";
+      labelColor = "text-emerald-600";
+    }
+    
+    if (urgencyScore) urgencyScore.textContent = score + "%";
+    if (urgencyLabel) {
+      urgencyLabel.textContent = label;
+      urgencyLabel.className = "text-sm font-semibold uppercase tracking-wide " + labelColor;
+    }
+    
+    // Animate gauge needle
+    if (window.setRiskGauge) window.setRiskGauge(score);
   };
 
-  const renderList = (container, items) => {
-    if (!container) return;
+  const renderRedFlags = (items) => {
+    if (!redFlags) return;
     if (!items || items.length === 0) {
-      container.innerHTML = "<li class=\"text-slate-400\">-</li>";
+      redFlags.innerHTML = '<p class="text-sm text-emerald-600 flex items-center gap-2"><span class="material-symbols-outlined text-lg">check_circle</span>No red flags detected</p>';
       return;
     }
-    container.innerHTML = items.map((item) => `<li>${item}</li>`).join("");
+    redFlags.innerHTML = items.map((item) => `
+      <div class="flex items-start gap-3 p-3 bg-red-100/50 rounded-lg">
+        <span class="material-symbols-outlined text-red-500 text-lg flex-shrink-0">warning</span>
+        <p class="text-sm font-medium text-red-700">${item}</p>
+      </div>
+    `).join("");
+  };
+
+  const renderDifferential = (items) => {
+    if (!differentialList) return;
+    if (!items || items.length === 0) {
+      differentialList.innerHTML = '<li class="text-sm text-slate-400">Awaiting analysis...</li>';
+      return;
+    }
+    differentialList.innerHTML = items.map((item) => `
+      <li class="flex items-start gap-2 text-sm text-slate-700">
+        <span class="material-symbols-outlined text-indigo-400 text-sm mt-0.5">circle</span>
+        ${item}
+      </li>
+    `).join("");
+  };
+
+  const renderNextSteps = (items) => {
+    if (!nextSteps) return;
+    if (!items || items.length === 0) {
+      nextSteps.innerHTML = '<li class="flex items-start gap-2 text-sm opacity-75"><span class="material-symbols-outlined text-sm">arrow_forward</span>Select a case to view recommendations</li>';
+      return;
+    }
+    nextSteps.innerHTML = items.map((item) => `
+      <li class="flex items-start gap-2 text-sm">
+        <span class="material-symbols-outlined text-sm mt-0.5">arrow_forward</span>
+        ${item}
+      </li>
+    `).join("");
+  };
+
+  const renderVitals = (vitals) => {
+    if (!vitalsSummary) return;
+    if (!vitals) {
+      vitalsSummary.innerHTML = `
+        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">HR</p><p class="text-lg font-bold text-slate-800">--</p></div>
+        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">RR</p><p class="text-lg font-bold text-slate-800">--</p></div>
+        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">Temp</p><p class="text-lg font-bold text-slate-800">--</p></div>
+        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">SpO2</p><p class="text-lg font-bold text-slate-800">--</p></div>
+        <div class="text-center p-3 bg-slate-50 rounded-xl col-span-2"><p class="text-xs text-slate-500 font-medium">Blood Pressure</p><p class="text-lg font-bold text-slate-800">--/--</p></div>
+      `;
+      return;
+    }
+    
+    // Highlight abnormal values
+    const hrClass = (vitals.heart_rate > 100 || vitals.heart_rate < 60) ? "text-amber-600" : "text-slate-800";
+    const rrClass = vitals.respiratory_rate > 20 ? "text-amber-600" : "text-slate-800";
+    const tempClass = vitals.temperature_c >= 38 ? "text-red-600" : "text-slate-800";
+    const spo2Class = vitals.spo2 < 95 ? "text-red-600" : "text-slate-800";
+    const bpClass = (vitals.systolic_bp > 140 || vitals.systolic_bp < 90) ? "text-amber-600" : "text-slate-800";
+    
+    vitalsSummary.innerHTML = `
+      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">HR</p><p class="text-lg font-bold ${hrClass}">${vitals.heart_rate}</p></div>
+      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">RR</p><p class="text-lg font-bold ${rrClass}">${vitals.respiratory_rate}</p></div>
+      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">Temp</p><p class="text-lg font-bold ${tempClass}">${vitals.temperature_c}°C</p></div>
+      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">SpO2</p><p class="text-lg font-bold ${spo2Class}">${vitals.spo2}%</p></div>
+      <div class="text-center p-3 bg-slate-50 rounded-xl col-span-2"><p class="text-xs text-slate-500 font-medium">Blood Pressure</p><p class="text-lg font-bold ${bpClass}">${vitals.systolic_bp}/${vitals.diastolic_bp}</p></div>
+    `;
   };
 
   const renderQueue = (items) => {
     if (!queue) return;
+    if (items.length === 0) {
+      queue.innerHTML = '';
+      if (queueEmpty) queueEmpty.classList.remove('hidden');
+      return;
+    }
+    if (queueEmpty) queueEmpty.classList.add('hidden');
+    
     queue.innerHTML = items
-      .map(
-        (i) => `
-          <button class="text-left border border-slate-200 rounded-lg p-3 hover:bg-slate-50" data-id="${i.id}">
-            <div class="font-semibold">${i.full_name}, ${i.age}</div>
-            <div class="text-xs text-slate-500">${i.chief_complaint}</div>
-            <div class="text-xs text-slate-400">${i.created_at}</div>
-          </button>
-        `
-      )
+      .map((i) => {
+        const priority = i.clinical_summary?.priority_level || i.priority_level || "PENDING";
+        const isActive = currentIntakeId === i.id;
+        let priorityBadgeClass = "bg-slate-100 text-slate-600";
+        if (priority === "HIGH") priorityBadgeClass = "bg-red-100 text-red-600";
+        else if (priority === "MED") priorityBadgeClass = "bg-amber-100 text-amber-600";
+        else if (priority === "LOW") priorityBadgeClass = "bg-emerald-100 text-emerald-600";
+        
+        return `
+          <div class="case-card bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 ${isActive ? 'active' : 'border-white/50'} shadow-lg shadow-slate-200/30 cursor-pointer" data-id="${i.id}">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <h3 class="font-bold text-slate-800">${i.full_name}</h3>
+              <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass} uppercase">${priority}</span>
+            </div>
+            <p class="text-sm text-slate-600 mb-1">${i.age} yrs • ${i.sex || 'N/A'}</p>
+            <p class="text-xs text-slate-500 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
+            <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
+              <span class="material-symbols-outlined text-xs">schedule</span>
+              ${i.created_at || 'Recent'}
+            </div>
+          </div>
+        `;
+      })
       .join("");
   };
 
   const updateDetails = (data) => {
     currentIntakeId = data.id;
     if (patientName) {
-      patientName.textContent = `${data.full_name}, ${data.age} ${data.sex || ""}`.trim();
+      patientName.textContent = `${data.full_name}, ${data.age}${data.sex ? data.sex[0] : ''}`;
     }
-    if (patientMeta) patientMeta.textContent = `ID: #${data.id}`;
-    if (chiefComplaint) chiefComplaint.textContent = data.chief_complaint || "-";
-    if (aiSummary) aiSummary.textContent = data.clinical_summary?.short_summary || "-";
+    if (patientMeta) patientMeta.textContent = `Patient ID: #${data.id}`;
+    if (chiefComplaint) chiefComplaint.textContent = data.chief_complaint || "--";
+    if (aiSummary) aiSummary.textContent = data.clinical_summary?.short_summary || "Select a case to view AI-generated clinical summary.";
 
     setPriority(data.clinical_summary?.priority_level);
-
-    if (vitalsSummary) {
-      if (data.vitals) {
-        vitalsSummary.textContent = `HR ${data.vitals.heart_rate} | RR ${data.vitals.respiratory_rate} | Temp ${data.vitals.temperature_c}C | SpO2 ${data.vitals.spo2}% | BP ${data.vitals.systolic_bp}/${data.vitals.diastolic_bp}`;
-      } else {
-        vitalsSummary.textContent = "-";
-      }
-    }
-
-    renderList(redFlags, data.clinical_summary?.red_flags || []);
-    renderList(differentialList, data.clinical_summary?.differential || []);
-    renderList(nextSteps, data.clinical_summary?.recommended_next_steps || []);
+    renderVitals(data.vitals);
+    renderRedFlags(data.clinical_summary?.red_flags || []);
+    renderDifferential(data.clinical_summary?.differential || []);
+    renderNextSteps(data.clinical_summary?.recommended_next_steps || []);
 
     if (doctorNote) {
       doctorNote.value = data.clinical_summary?.doctor_note || "";
@@ -88,27 +199,28 @@
   };
 
   const loadCase = async (id) => {
-    const res = await fetch(`/api/intakes/${encodeURIComponent(id)}`);
+    const res = await fetch(API_BASE + `/api/intakes/${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error("Failed to load case");
     const data = await res.json();
     updateDetails(data);
+    // Refresh queue to show active state
+    loadQueue();
   };
 
   const loadQueue = async () => {
-    const res = await fetch("/api/intakes");
+    const res = await fetch(API_BASE + "/api/intakes");
     const data = await res.json();
     const items = Array.isArray(data) ? data : data.items || [];
     const ready = items.filter((i) => i.has_summary);
 
     renderQueue(ready);
-    if (queueSubtitle) queueSubtitle.textContent = `${ready.length} cases ready for review`;
-    if (queueEmpty) queueEmpty.classList.toggle("hidden", ready.length > 0);
+    if (queueSubtitle) queueSubtitle.textContent = `${ready.length} case${ready.length !== 1 ? 's' : ''} ready for review`;
 
     const params = new URLSearchParams(window.location.search);
     const intakeId = params.get("intake_id");
-    if (intakeId && ready.find((i) => String(i.id) === String(intakeId))) {
+    if (intakeId && ready.find((i) => String(i.id) === String(intakeId)) && !currentIntakeId) {
       await loadCase(intakeId);
-    } else if (ready.length > 0) {
+    } else if (ready.length > 0 && !currentIntakeId) {
       await loadCase(ready[0].id);
     }
   };
@@ -123,13 +235,18 @@
   }
 
   const submitDecision = async (decision) => {
-    if (!currentIntakeId) return;
+    if (!currentIntakeId) {
+      if (window.showToast) {
+        window.showToast('No Case Selected', 'Please select a case first.', true);
+      }
+      return;
+    }
     if (decisionError) {
       decisionError.classList.add("hidden");
       decisionError.textContent = "";
     }
     try {
-      const res = await fetch(`/api/intakes/${currentIntakeId}/decision`, {
+      const res = await fetch(API_BASE + `/api/intakes/${currentIntakeId}/decision`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +258,17 @@
         const msg = await res.text();
         throw new Error(msg || "Decision failed");
       }
+      // Show success modal instead of alert
+      if (window.showSuccessModal) {
+        window.showSuccessModal(decision === "ADMIT");
+      } else {
+        alert(`✅ Decision saved: ${decision === "ADMIT" ? "Patient Admitted" : "Not Admitted"}`);
+        window.location.reload();
+      }
     } catch (err) {
+      if (window.showToast) {
+        window.showToast('Error', 'Unable to save decision. Please retry.', true);
+      }
       if (decisionError) {
         decisionError.textContent = "Unable to save decision. Please retry.";
         decisionError.classList.remove("hidden");

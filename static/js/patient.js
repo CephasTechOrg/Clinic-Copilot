@@ -1,12 +1,24 @@
 (function () {
+  // API Base URL - allows file to work when opened directly
+  const API_BASE = "http://localhost:8000";
+  
+  console.log('[Patient.js] Script loaded');
+  
   const form = document.getElementById("intake-form");
   const errorEl = document.getElementById("intake-error");
   const successEl = document.getElementById("intake-success");
   const submitBtn = document.getElementById("submit-intake");
 
-  if (!form) return;
+  console.log('[Patient.js] Form element:', form ? 'Found' : 'NOT FOUND');
+  console.log('[Patient.js] Submit button:', submitBtn ? 'Found' : 'NOT FOUND');
+
+  if (!form) {
+    console.error('[Patient.js] Form not found - exiting');
+    return;
+  }
 
   form.addEventListener("submit", async (e) => {
+    console.log('[Patient.js] Form submitted');
     e.preventDefault();
     if (errorEl) {
       errorEl.classList.add("hidden");
@@ -18,6 +30,7 @@
     }
 
     const formData = new FormData(form);
+    const severityValue = formData.get("severity")?.toString().trim();
     const payload = {
       full_name: formData.get("full_name")?.toString().trim(),
       age: Number(formData.get("age")),
@@ -26,7 +39,7 @@
       chief_complaint: formData.get("chief_complaint")?.toString().trim(),
       symptoms: formData.get("symptoms")?.toString().trim(),
       duration: formData.get("duration")?.toString().trim(),
-      severity: formData.get("severity")?.toString().trim(),
+      severity: severityValue.includes('/') ? severityValue : severityValue + "/10",
       history: formData.get("history")?.toString().trim() || "",
       medications: formData.get("medications")?.toString().trim() || "",
       allergies: formData.get("allergies")?.toString().trim() || "",
@@ -51,7 +64,9 @@
 
     try {
       if (submitBtn) submitBtn.disabled = true;
-      const res = await fetch("/api/intakes", {
+      console.log('[Patient.js] Sending to API:', API_BASE + '/api/intakes');
+      
+      const res = await fetch(API_BASE + "/api/intakes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -63,21 +78,42 @@
       }
 
       const data = await res.json();
-      const intakeId = data.id;
+      console.log('[Patient.js] API response:', data);
+      
+      // Show success toast with proper message
+      if (window.showToast) {
+        window.showToast('Success!', 'Data successfully submitted to Nurse');
+      }
+      
+      // Reset the form for next patient
+      form.reset();
+      
+      // Update progress bar if exists
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressText) progressText.textContent = '0%';
+      
+      // Reset severity display
+      const severityDisplay = document.getElementById('severity-display');
+      if (severityDisplay) severityDisplay.textContent = '5/10';
+      
+      // Show success message in the page as well
       if (successEl) {
-        successEl.textContent = "Submitted successfully. Redirecting to nurse...";
+        successEl.textContent = "Patient intake submitted successfully! The nurse will see this data when they load their portal.";
         successEl.classList.remove("hidden");
       }
-      setTimeout(() => {
-        window.location.href = `/nurse?intake_id=${encodeURIComponent(intakeId)}`;
-      }, 600);
+      
     } catch (err) {
+      console.error('[Patient.js] Error:', err);
+      if (window.showToast) {
+        window.showToast('Submission Failed', 'Please check your connection and try again.', true);
+      }
       if (errorEl) {
         errorEl.textContent =
-          "Unable to submit intake. Please check your fields and try again.";
+          "Unable to submit intake. Please check your connection and try again.";
         errorEl.classList.remove("hidden");
       }
-      console.error(err);
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
