@@ -14,10 +14,14 @@ Return STRICT JSON with the following format:
 
 Rules:
 - Use only the provided data.
-- Be concise and clinically oriented.
 - "priority_level" must be one of LOW, MED, HIGH.
 - If data is insufficient for a list, return an empty list.
 - Do not include markdown or extra text. Return ONLY JSON.
+- The "short_summary" must be 3-5 sentences and include:
+  - Demographics (age, sex)
+  - Chief complaint + key symptoms, duration, severity
+  - Notable abnormal vitals if present (HR, RR, Temp, SpO2, BP)
+  - A clinician-facing impression (not a diagnosis)
 
 PATIENT DATA:
 Name: {{full_name}}

@@ -33,7 +33,11 @@
   
   const queue = document.getElementById("doctor-queue");
   const queueEmpty = document.getElementById("doctor-queue-empty");
+  const queueHistory = document.getElementById("doctor-queue-history");
+  const queueHistoryEmpty = document.getElementById("doctor-queue-history-empty");
   const queueSubtitle = document.getElementById("doctor-queue-subtitle");
+  const queueTogglePending = document.getElementById("doctor-queue-toggle-pending");
+  const queueToggleHistory = document.getElementById("doctor-queue-toggle-history");
 
   const patientName = document.getElementById("patient-name");
   const patientMeta = document.getElementById("patient-meta");
@@ -44,6 +48,7 @@
   const redFlags = document.getElementById("red-flags");
   const differentialList = document.getElementById("differential-list");
   const nextSteps = document.getElementById("next-steps");
+  const recommendedQuestions = document.getElementById("recommended-questions");
   const doctorNote = document.getElementById("doctor-note");
   const urgencyScore = document.getElementById("urgency-score");
   const urgencyLabel = document.getElementById("urgency-label");
@@ -53,6 +58,7 @@
   const decisionError = document.getElementById("decision-error");
 
   let currentIntakeId = null;
+  let viewMode = "pending";
 
   const setPriority = (level) => {
     const norm = (level || "PENDING").toUpperCase();
@@ -142,6 +148,19 @@
     `).join("");
   };
 
+  const renderQuestions = (items) => {
+    if (!recommendedQuestions) return;
+    if (!items || items.length === 0) {
+      recommendedQuestions.innerHTML = '<li class="text-sm text-slate-400">Select a case to view questions</li>';
+      return;
+    }
+    recommendedQuestions.innerHTML = items.map((item) => `
+      <li class="flex items-start gap-2 text-sm text-slate-700">
+        <span class="material-symbols-outlined text-sky-400 text-sm mt-0.5">help</span>
+        ${item}
+      </li>
+    `).join("");
+  };
   const renderVitals = (vitals) => {
     if (!vitalsSummary) return;
     if (!vitals) {
@@ -171,16 +190,16 @@
     `;
   };
 
-  const renderQueue = (items) => {
-    if (!queue) return;
-    if (items.length === 0) {
-      queue.innerHTML = '';
-      if (queueEmpty) queueEmpty.classList.remove('hidden');
+  const renderQueue = (items, targetEl, emptyEl, showDecision = false) => {
+    if (!targetEl) return;
+    if (!items || items.length === 0) {
+      targetEl.innerHTML = '';
+      if (emptyEl) emptyEl.classList.remove('hidden');
       return;
     }
-    if (queueEmpty) queueEmpty.classList.add('hidden');
-    
-    queue.innerHTML = items
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    targetEl.innerHTML = items
       .map((i) => {
         const priority = i.clinical_summary?.priority_level || i.priority_level || "PENDING";
         const isActive = currentIntakeId === i.id;
@@ -188,12 +207,18 @@
         if (priority === "HIGH") priorityBadgeClass = "bg-red-100 text-red-600";
         else if (priority === "MED") priorityBadgeClass = "bg-amber-100 text-amber-600";
         else if (priority === "LOW") priorityBadgeClass = "bg-emerald-100 text-emerald-600";
+
+        const decision = i.clinical_summary?.decision || "PENDING";
+        const decisionLabel = showDecision ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase">${decision}</span>` : "";
         
         return `
           <div class="case-card bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 ${isActive ? 'active' : 'border-white/50'} shadow-lg shadow-slate-200/30 cursor-pointer" data-id="${i.id}">
             <div class="flex items-start justify-between gap-2 mb-2">
               <h3 class="font-bold text-slate-800">${i.full_name}</h3>
-              <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass} uppercase">${priority}</span>
+              <div class="flex items-center gap-1">
+                ${decisionLabel}
+                <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass} uppercase">${priority}</span>
+              </div>
             </div>
             <p class="text-sm text-slate-600 mb-1">${i.age} yrs - ${i.sex || 'N/A'}</p>
             <p class="text-xs text-slate-500 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
@@ -205,6 +230,23 @@
         `;
       })
       .join("");
+  };
+
+  const setViewMode = (mode) => {
+    viewMode = mode;
+    if (queueTogglePending && queueToggleHistory) {
+      if (mode === "pending") {
+        queueTogglePending.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-primary-500 text-white";
+        queueToggleHistory.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600";
+      } else {
+        queueTogglePending.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600";
+        queueToggleHistory.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-primary-500 text-white";
+      }
+    }
+    if (queue) queue.classList.toggle('hidden', mode !== "pending");
+    if (queueEmpty) queueEmpty.classList.toggle('hidden', mode !== "pending");
+    if (queueHistory) queueHistory.classList.toggle('hidden', mode !== "history");
+    if (queueHistoryEmpty) queueHistoryEmpty.classList.toggle('hidden', mode !== "history");
   };
 
   const updateDetails = (data) => {
@@ -220,6 +262,7 @@
     renderVitals(data.vitals);
     renderRedFlags(data.clinical_summary?.red_flags || []);
     renderDifferential(data.clinical_summary?.differential || []);
+    renderQuestions(data.clinical_summary?.recommended_questions || []);
     renderNextSteps(data.clinical_summary?.recommended_next_steps || []);
 
     if (doctorNote) {
@@ -262,20 +305,33 @@
       return i.has_summary && decision === "PENDING";
     });
 
-    renderQueue(ready);
-    if (queueSubtitle) queueSubtitle.textContent = `${ready.length} case${ready.length !== 1 ? 's' : ''} ready for review`;
+    const pending = items.filter((i) => i.workflow_status === "PENDING_DOCTOR");
+    const completed = items.filter((i) => i.workflow_status === "COMPLETED");
+
+    renderQueue(pending, queue, queueEmpty, false);
+    renderQueue(completed, queueHistory, queueHistoryEmpty, true);
+    if (queueSubtitle) queueSubtitle.textContent = `${pending.length} case${pending.length !== 1 ? 's' : ''} ready for review`;
 
     const params = new URLSearchParams(window.location.search);
     const intakeId = params.get("intake_id");
-    if (intakeId && ready.find((i) => String(i.id) === String(intakeId)) && !currentIntakeId) {
+    if (intakeId && pending.find((i) => String(i.id) === String(intakeId)) && !currentIntakeId) {
       await loadCase(intakeId);
-    } else if (ready.length > 0 && !currentIntakeId) {
-      await loadCase(ready[0].id);
+    } else if (pending.length > 0 && !currentIntakeId) {
+      await loadCase(pending[0].id);
     }
   };
 
   if (queue) {
     queue.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-id]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-id");
+      if (id) loadCase(id).catch(console.error);
+    });
+  }
+
+  if (queueHistory) {
+    queueHistory.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-id]");
       if (!btn) return;
       const id = btn.getAttribute("data-id");
@@ -334,5 +390,13 @@
   if (decisionAdmit) decisionAdmit.addEventListener("click", () => submitDecision("ADMIT"));
   if (decisionDeny) decisionDeny.addEventListener("click", () => submitDecision("NOT_ADMIT"));
 
+  if (queueTogglePending) {
+    queueTogglePending.addEventListener("click", () => setViewMode("pending"));
+  }
+  if (queueToggleHistory) {
+    queueToggleHistory.addEventListener("click", () => setViewMode("history"));
+  }
+
+  setViewMode(viewMode);
   loadQueue().catch(console.error);
 })();

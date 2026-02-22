@@ -211,12 +211,32 @@ def fallback_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
         symptoms=intake["symptoms"],
     )
 
+    age = intake.get("age", "")
+    sex = intake.get("sex", "")
+    name = intake.get("full_name", "Patient")
+    chief = intake.get("chief_complaint", "")
+    symptoms = intake.get("symptoms", "")
+    duration = intake.get("duration", "")
+    severity = intake.get("severity", "")
+
+    vitals_summary = (
+        f"Vitals: HR {vitals.get('heart_rate', '')} bpm, RR {vitals.get('respiratory_rate', '')}/min, "
+        f"Temp {vitals.get('temperature_c', '')} C, SpO2 {vitals.get('spo2', '')}%, "
+        f"BP {vitals.get('systolic_bp', '')}/{vitals.get('diastolic_bp', '')}."
+    )
+
+    short_summary = (
+        f"{name} is a {age}-year-old {sex} presenting with {chief}. "
+        f"Symptoms include {symptoms}. Duration: {duration}; Severity: {severity}. "
+        f"{vitals_summary} Clinical assessment is required based on the above findings."
+    )
+
     return {
-        "short_summary": f"{intake['full_name']} presents with {intake['chief_complaint']}.",
+        "short_summary": short_summary,
         "priority_level": priority,
         "red_flags": flags,
         "differential_considerations": ["Further clinical evaluation required."],
-        "recommended_questions": ["Expand review of systems."],
-        "recommended_next_steps": ["Follow hospital triage protocol."],
+        "recommended_questions": ["Clarify symptom progression and associated symptoms."],
+        "recommended_next_steps": ["Follow hospital triage protocol and consider targeted diagnostics."],
     }
 

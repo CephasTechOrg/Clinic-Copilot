@@ -166,6 +166,11 @@
             </button>
           </div>
 
+          <div class="flex items-center gap-2">
+            <button id="queue-toggle-pending" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-teal-500 text-white">Pending</button>
+            <button id="queue-toggle-history" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">History</button>
+          </div>
+
           <div class="space-y-3" id="queue-list">
             <!-- Patient cards will be inserted here -->
           </div>
@@ -176,6 +181,18 @@
             </div>
             <p class="text-slate-500 font-medium">No patients in queue</p>
             <p class="text-sm text-slate-400">New patients will appear here</p>
+          </div>
+
+          <div class="hidden space-y-3" id="queue-history">
+            <!-- Completed/forwarded cards will be inserted here -->
+          </div>
+
+          <div class="hidden text-center py-8" id="queue-history-empty">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <span class="material-symbols-outlined text-slate-400 text-3xl">history</span>
+            </div>
+            <p class="text-slate-500 font-medium">No history yet</p>
+            <p class="text-sm text-slate-400">Completed cases will appear here</p>
           </div>
 
           <!-- Quick Stats -->

@@ -33,6 +33,10 @@
   
   const queueList = document.getElementById("queue-list");
   const queueEmpty = document.getElementById("queue-empty");
+  const queueHistory = document.getElementById("queue-history");
+  const queueHistoryEmpty = document.getElementById("queue-history-empty");
+  const queueTogglePending = document.getElementById("queue-toggle-pending");
+  const queueToggleHistory = document.getElementById("queue-toggle-history");
   const queueSubtitle = document.getElementById("queue-subtitle");
   const vitalsLabel = document.getElementById("vitals-patient-label");
   const vitalsForm = document.getElementById("vitals-form");
@@ -44,6 +48,7 @@
   console.log('[Nurse.js] vitalsForm element:', vitalsForm ? 'Found' : 'NOT FOUND');
 
   let selectedIntake = null;
+  let viewMode = "pending";
 
   const priorityClass = (level) => {
     const norm = (level || "").toUpperCase();
@@ -61,26 +66,16 @@
     return "bg-slate-100 text-slate-600 border border-slate-200";
   };
 
-  const renderQueue = (items) => {
-    if (!queueList) return;
-    
-    // Filter to show patients pending for nurse (awaiting vitals)
-    // Use workflow_status OR has_vitals to determine pending status
-    const pendingItems = items.filter(i => !i.has_vitals || i.workflow_status === 'PENDING_NURSE');
-    const completedCount = items.filter(i => i.has_vitals && i.workflow_status !== 'PENDING_NURSE').length;
-    
-    if (statWaiting) statWaiting.textContent = pendingItems.length;
-    if (statCompleted) statCompleted.textContent = completedCount;
-    
-    if (pendingItems.length === 0) {
-      queueList.innerHTML = '';
-      if (queueEmpty) queueEmpty.classList.remove('hidden');
+  const renderQueue = (items, targetEl, emptyEl) => {
+    if (!targetEl) return;
+    if (!items || items.length === 0) {
+      targetEl.innerHTML = '';
+      if (emptyEl) emptyEl.classList.remove('hidden');
       return;
     }
-    
-    if (queueEmpty) queueEmpty.classList.add('hidden');
-    
-    queueList.innerHTML = pendingItems
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    targetEl.innerHTML = items
       .map((i, index) => {
         const priority = i.priority_level || "NEW";
         const isSelected = selectedIntake && selectedIntake.id === i.id;
@@ -107,6 +102,23 @@
         `;
       })
       .join("");
+  };
+
+  const setViewMode = (mode) => {
+    viewMode = mode;
+    if (queueTogglePending && queueToggleHistory) {
+      if (mode === "pending") {
+        queueTogglePending.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-teal-500 text-white";
+        queueToggleHistory.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600";
+      } else {
+        queueTogglePending.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600";
+        queueToggleHistory.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-teal-500 text-white";
+      }
+    }
+    if (queueList) queueList.classList.toggle('hidden', mode !== "pending");
+    if (queueEmpty) queueEmpty.classList.toggle('hidden', mode !== "pending");
+    if (queueHistory) queueHistory.classList.toggle('hidden', mode !== "history");
+    if (queueHistoryEmpty) queueHistoryEmpty.classList.toggle('hidden', mode !== "history");
   };
 
   const setSelected = (intake) => {
@@ -139,9 +151,17 @@
       console.log('[Nurse.js] API data:', data);
       const items = Array.isArray(data) ? data : data.items || [];
       console.log('[Nurse.js] Items count:', items.length);
-      renderQueue(items);
+      const pendingItems = items.filter(i => !i.has_vitals || i.workflow_status === 'PENDING_NURSE');
+      const historyItems = items.filter(i => i.has_vitals && i.workflow_status !== 'PENDING_NURSE');
+      const completedCount = historyItems.length;
+
+      if (statWaiting) statWaiting.textContent = pendingItems.length;
+      if (statCompleted) statCompleted.textContent = completedCount;
+
+      renderQueue(pendingItems, queueList, queueEmpty);
+      renderQueue(historyItems, queueHistory, queueHistoryEmpty);
       
-      const pendingCount = items.filter(i => !i.has_summary).length;
+      const pendingCount = pendingItems.length;
       if (queueSubtitle) {
         queueSubtitle.textContent = `${pendingCount} patient${pendingCount !== 1 ? 's' : ''} awaiting vitals`;
       }
@@ -156,8 +176,8 @@
             vitalsLabel.textContent = `Patient: ${found.full_name}, ${found.age} yrs`;
           }
         }
-      } else if (items.length > 0 && !selectedIntake) {
-        const firstPending = items.find(i => !i.has_summary);
+      } else if (pendingItems.length > 0 && !selectedIntake) {
+        const firstPending = pendingItems[0];
         if (firstPending) {
           selectedIntake = firstPending;
           if (vitalsLabel) {
@@ -176,6 +196,28 @@
 
   if (queueList) {
     queueList.addEventListener("click", (e) => {
+      const target = e.target.closest("[data-intake-id]");
+      if (!target) return;
+      const intakeId = target.getAttribute("data-intake-id");
+      if (!intakeId) return;
+      fetch(API_BASE + `/api/intakes/${encodeURIComponent(intakeId)}`, {
+        headers: getHeaders()
+      })
+        .then((res) => {
+          if (res.status === 401) {
+            if (typeof AUTH !== 'undefined') AUTH.clearAuth();
+            window.location.href = LOGIN_URL;
+            return;
+          }
+          return res.json();
+        })
+        .then((intake) => { if (intake) setSelected(intake); })
+        .catch((err) => console.error(err));
+    });
+  }
+
+  if (queueHistory) {
+    queueHistory.addEventListener("click", (e) => {
       const target = e.target.closest("[data-intake-id]");
       if (!target) return;
       const intakeId = target.getAttribute("data-intake-id");
@@ -283,5 +325,13 @@
     });
   }
 
+  if (queueTogglePending) {
+    queueTogglePending.addEventListener("click", () => setViewMode("pending"));
+  }
+  if (queueToggleHistory) {
+    queueToggleHistory.addEventListener("click", () => setViewMode("history"));
+  }
+
+  setViewMode(viewMode);
   loadQueue();
 })();

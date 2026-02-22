@@ -202,6 +202,11 @@
             </button>
           </div>
 
+          <div class="flex items-center gap-2">
+            <button id="doctor-queue-toggle-pending" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-primary-500 text-white">Pending</button>
+            <button id="doctor-queue-toggle-history" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">History</button>
+          </div>
+
           <div class="space-y-3" id="doctor-queue">
             <!-- Case cards will be inserted here -->
           </div>
@@ -212,6 +217,18 @@
             </div>
             <p class="text-slate-500 font-medium">All caught up!</p>
             <p class="text-sm text-slate-400">No pending cases to review</p>
+          </div>
+
+          <div class="hidden space-y-3" id="doctor-queue-history">
+            <!-- Completed cases will be inserted here -->
+          </div>
+
+          <div class="hidden text-center py-8" id="doctor-queue-history-empty">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <span class="material-symbols-outlined text-slate-400 text-3xl">history</span>
+            </div>
+            <p class="text-slate-500 font-medium">No history yet</p>
+            <p class="text-sm text-slate-400">Completed cases will appear here</p>
           </div>
         </section>
 
@@ -329,6 +346,17 @@
                 <li class="text-sm text-slate-500">--</li>
               </ul>
             </div>
+          </div>
+
+          <!-- Recommended Questions -->
+          <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="material-symbols-outlined text-sky-500">help</span>
+              <h3 class="font-semibold text-slate-800">Recommended Questions</h3>
+            </div>
+            <ul class="space-y-2" id="recommended-questions">
+              <li class="text-sm text-slate-500">--</li>
+            </ul>
           </div>
 
           <!-- Recommended Next Steps -->
