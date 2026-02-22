@@ -6,6 +6,8 @@ from pydantic import BaseModel
 import logging
 import os
 from typing import Any
+import json
+import hashlib
 from dotenv import load_dotenv
 
 from ..db import get_db
@@ -18,6 +20,8 @@ from ..services.ai import (
     language_name,
     is_gemini_ready,
     translate_text_with_status,
+    gemini_status,
+    translate_fields_payload,
 )
 from ..auth import require_nurse, require_doctor, require_staff
 
@@ -27,6 +31,18 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["api"])
 
+_TRANSLATION_CACHE: dict[str, dict[str, Any]] = {}
+_TRANSLATION_CACHE_MAX = 200
+
+
+def _cache_key(language: str, fields: dict[str, Any]) -> str:
+    try:
+        payload = json.dumps(fields, sort_keys=True, ensure_ascii=False)
+    except Exception:
+        payload = str(fields)
+    digest = hashlib.sha256(payload.encode("utf-8", errors="ignore")).hexdigest()
+    return f"{language}:{digest}"
+
 
 @router.get("/health")
 def health_check(db: Session = Depends(get_db)):
@@ -34,11 +50,10 @@ def health_check(db: Session = Depends(get_db)):
     try:
         # Test database connection
         db.execute(select(PatientIntake).limit(1))
-        gemini_configured = bool(os.getenv("GEMINI_API_KEY"))
         return {
             "status": "healthy",
             "database": "connected",
-            "ai_configured": gemini_configured
+            "ai": gemini_status(),
         }
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Service unavailable: {str(e)}")
@@ -158,12 +173,19 @@ def create_intake(payload: IntakeCreate, db: Session = Depends(get_db)):
         intake_data["medications_original"] = intake_data.get("medications", "")
         intake_data["allergies_original"] = intake_data.get("allergies", "")
 
-        intake_data["chief_complaint"] = translate_text(intake_data.get("chief_complaint", ""), "English")
-        intake_data["symptoms"] = translate_text(intake_data.get("symptoms", ""), "English")
-        intake_data["duration"] = translate_text(intake_data.get("duration", ""), "English")
-        intake_data["history"] = translate_text(intake_data.get("history", ""), "English")
-        intake_data["medications"] = translate_text(intake_data.get("medications", ""), "English")
-        intake_data["allergies"] = translate_text(intake_data.get("allergies", ""), "English")
+        fields = {
+            "chief_complaint": intake_data.get("chief_complaint", ""),
+            "symptoms": intake_data.get("symptoms", ""),
+            "duration": intake_data.get("duration", ""),
+            "history": intake_data.get("history", ""),
+            "medications": intake_data.get("medications", ""),
+            "allergies": intake_data.get("allergies", ""),
+        }
+        translated, ok, reason = translate_fields_payload(fields, "English")
+        if ok:
+            intake_data.update(translated)
+        else:
+            logger.warning("Intake translation skipped (%s); using original language.", reason or "failed")
 
     intake = PatientIntake(**intake_data)
     intake.workflow_status = "PENDING_NURSE"
@@ -310,30 +332,6 @@ class TranslateRequest(BaseModel):
     fields: dict[str, Any]
 
 
-def _translate_value(value: Any, target_language: str) -> tuple[Any, bool]:
-    if value is None:
-        return value, False
-    if isinstance(value, str):
-        return translate_text_with_status(value, language_name(target_language))
-    if isinstance(value, list):
-        translated: list[Any] = []
-        any_ok = False
-        for item in value:
-            translated_item, ok = _translate_value(item, target_language)
-            translated.append(translated_item)
-            any_ok = any_ok or ok
-        return translated, any_ok
-    if isinstance(value, dict):
-        translated: dict[str, Any] = {}
-        any_ok = False
-        for key, val in value.items():
-            translated_val, ok = _translate_value(val, target_language)
-            translated[key] = translated_val
-            any_ok = any_ok or ok
-        return translated, any_ok
-    return value, False
-
-
 @router.post("/translate")
 def translate_payload(payload: TranslateRequest = Body(...), user: User = Depends(require_staff)):
     target_language = (payload.language or "en").lower()
@@ -344,23 +342,28 @@ def translate_payload(payload: TranslateRequest = Body(...), user: User = Depend
     if target_language == "en":
         return {"language": "en", "fields": payload.fields, "translated": False}
 
-    if not is_gemini_ready():
-        logger.warning("Gemini not configured; translation skipped.")
+    cache_key = _cache_key(target_language, payload.fields or {})
+    if cache_key in _TRANSLATION_CACHE:
         return {
             "language": target_language,
-            "fields": payload.fields,
-            "translated": False,
-            "reason": "ai_not_configured",
+            "fields": _TRANSLATION_CACHE[cache_key],
+            "translated": True,
+            "cached": True,
         }
 
-    translated: dict[str, Any] = {}
-    any_ok = False
-    for key, value in (payload.fields or {}).items():
-        translated_value, ok = _translate_value(value, target_language)
-        translated[key] = translated_value
-        any_ok = any_ok or ok
+    translated, ok, reason = translate_fields_payload(payload.fields or {}, target_language)
+    if ok:
+        if len(_TRANSLATION_CACHE) >= _TRANSLATION_CACHE_MAX:
+            _TRANSLATION_CACHE.clear()
+        _TRANSLATION_CACHE[cache_key] = translated
+        return {"language": target_language, "fields": translated, "translated": True}
 
-    return {"language": target_language, "fields": translated, "translated": any_ok}
+    return {
+        "language": target_language,
+        "fields": payload.fields,
+        "translated": False,
+        "reason": reason or "failed",
+    }
 
 
 @router.post("/seed-demo-data")

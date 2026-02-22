@@ -10,14 +10,20 @@ This module:
 
 import os
 import json
+import time
 import logging
 from typing import Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
+GENAI_IMPORT_ERROR = None
 try:
     from google import genai
-except ModuleNotFoundError:
+except ModuleNotFoundError as e:
     genai = None
+    GENAI_IMPORT_ERROR = str(e)
+except Exception as e:
+    genai = None
+    GENAI_IMPORT_ERROR = str(e)
 
 from .triage_rules import rule_based_flags
 
@@ -58,6 +64,16 @@ def language_name(code_or_name: str) -> str:
 
 def is_gemini_ready() -> bool:
     return bool(GEMINI_API_KEY and genai and GENAI_CLIENT)
+
+
+def gemini_status() -> dict:
+    return {
+        "configured": bool(GEMINI_API_KEY),
+        "library_loaded": bool(genai),
+        "client_ready": bool(GENAI_CLIENT),
+        "model": MODEL_NAME,
+        "import_error": GENAI_IMPORT_ERROR,
+    }
 
 
 def translate_text(text: str, target_language: str) -> str:
@@ -113,6 +129,54 @@ def translate_text_with_status(text: str, target_language: str) -> tuple[str, bo
     except Exception as e:
         logger.warning("Gemini translate failed (%s); using original.", e)
         return text, False
+
+
+def translate_fields_payload(fields: Dict[str, Any], target_language: str) -> tuple[Dict[str, Any], bool, str | None]:
+    if not fields:
+        return fields, False, "empty_fields"
+    if not is_gemini_ready():
+        logger.warning("Gemini not configured; translation skipped.")
+        return fields, False, "ai_not_configured"
+    language = language_name(target_language)
+    payload = json.dumps(fields, ensure_ascii=False)
+    prompt = (
+        f"Translate all string values in the following JSON to {language}. "
+        "Preserve keys, structure, numbers, and arrays. Return ONLY valid JSON.\n\n"
+        f"JSON:\n{payload}"
+    )
+    attempts = 2
+    for idx in range(attempts):
+        try:
+            response = GENAI_CLIENT.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt,
+            )
+            output = getattr(response, "text", "") or ""
+            output = output.strip()
+            if "```" in output:
+                output = output.split("```")[1]
+                output = output.replace("json", "").strip()
+            if not output:
+                logger.warning("Gemini translate returned empty JSON; using original.")
+                return fields, False, "empty_response"
+            parsed = json.loads(output)
+            if not isinstance(parsed, dict):
+                logger.warning("Gemini translate returned non-dict JSON; using original.")
+                return fields, False, "invalid_json"
+            return parsed, True, None
+        except Exception as e:
+            message = str(e)
+            if "RESOURCE_EXHAUSTED" in message or "429" in message:
+                logger.warning("Gemini translate quota exhausted; using original.")
+                return fields, False, "quota_exceeded"
+            if "UNAVAILABLE" in message or "503" in message:
+                logger.warning("Gemini translate unavailable (high demand).")
+                if idx < attempts - 1:
+                    time.sleep(1.5)
+                    continue
+                return fields, False, "service_unavailable"
+            logger.warning("Gemini translate failed (%s); using original.", e)
+            return fields, False, "failed"
 
 
 def _load_prompt(name: str) -> str | None:

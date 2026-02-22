@@ -335,7 +335,11 @@
       translationCache[cacheKey][lang] = response.fields;
       applyTranslatedFields(response.fields);
       if (response.translated === false && window.showToast) {
-        window.showToast("Translation Unavailable", "Showing English instead.", true);
+        const reason = response.reason || "unavailable";
+        const message = reason === "quota_exceeded"
+          ? "Gemini quota exceeded. Showing English instead."
+          : "Translation unavailable. Showing English instead.";
+        window.showToast("Translation Unavailable", message, true);
       }
       return;
     }
