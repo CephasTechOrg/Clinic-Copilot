@@ -1,4 +1,5 @@
 .env
+.env.example
 *.db
 /pyspark-warehouse
 __pycache__/

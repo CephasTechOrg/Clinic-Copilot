@@ -56,6 +56,17 @@ def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
 
         parsed = json.loads(text_output)
 
+        required_keys = {
+            "short_summary",
+            "priority_level",
+            "red_flags",
+            "differential_considerations",
+            "recommended_questions",
+            "recommended_next_steps",
+        }
+        if not required_keys.issubset(parsed):
+            raise ValueError("Gemini response missing required keys")
+
         return parsed
 
     except Exception as e:
