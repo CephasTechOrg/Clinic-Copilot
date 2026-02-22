@@ -4,6 +4,24 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Doctor Registration - Clinic Co-Pilot</title>
+    <script>
+      (function() {
+        const isFile = window.location.protocol === 'file:';
+        const isBackend = window.location.origin.includes('localhost:8000') || window.location.origin.includes('127.0.0.1:8000');
+        const useStatic = isFile || !isBackend;
+        const baseDir = useStatic ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        window.APP_PATHS = {
+          isFile,
+          isBackend,
+          useStatic,
+          baseDir,
+          patient: useStatic ? baseDir + 'patient.html' : '/patient',
+          doctor: useStatic ? baseDir + 'doctor.html' : '/doctor',
+          doctorLogin: useStatic ? baseDir + 'doctor_login.html' : '/doctor/login',
+          doctorRegister: useStatic ? baseDir + 'doctor_register.html' : '/doctor/register',
+        };
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
@@ -133,14 +151,14 @@
         </div>
 
         <!-- Login Link -->
-        <a href="/doctor/login" class="block w-full py-3 px-4 text-center text-indigo-600 font-medium border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors">
+        <a id="login-link" href="/doctor/login" class="block w-full py-3 px-4 text-center text-indigo-600 font-medium border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors">
           Sign In Instead
         </a>
       </div>
 
       <!-- Back link -->
       <div class="mt-6 text-center">
-        <a href="/patient" class="text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+        <a id="back-to-patient" href="/patient" class="text-sm text-slate-500 hover:text-indigo-600 transition-colors">
           <- Back to Patient Portal
         </a>
       </div>
@@ -149,11 +167,16 @@
     <!-- Auth JS -->
     <script src="../static/js/auth.js"></script>
     <script>
+      const loginLink = document.getElementById('login-link');
+      const backLink = document.getElementById('back-to-patient');
+      if (loginLink && window.APP_PATHS) loginLink.href = window.APP_PATHS.doctorLogin;
+      if (backLink && window.APP_PATHS) backLink.href = window.APP_PATHS.patient;
+
       // If already logged in as doctor, redirect to portal
       if (AUTH.isAuthenticated()) {
         const user = AUTH.getUser();
         if (user && user.role === 'DOCTOR') {
-          window.location.href = '/doctor';
+          window.location.href = window.APP_PATHS ? window.APP_PATHS.doctor : '/doctor';
         }
       }
 
@@ -206,8 +229,8 @@
             body: JSON.stringify({
               staff_id: staffId,
               password: password,
-              confirm_password: confirmPassword,
-              full_name: fullName
+              full_name: fullName,
+              role: "DOCTOR"
             })
           });
 
@@ -219,7 +242,7 @@
           // Success - show message and redirect
           successDiv.classList.remove('hidden');
           setTimeout(() => {
-            window.location.href = '/doctor/login';
+            window.location.href = window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login';
           }, 2000);
 
         } catch (err) {

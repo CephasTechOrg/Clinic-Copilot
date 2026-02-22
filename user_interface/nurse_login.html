@@ -7,13 +7,17 @@
     <script>
       (function() {
         const isFile = window.location.protocol === 'file:';
-        const baseDir = isFile ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        const isBackend = window.location.origin.includes('localhost:8000') || window.location.origin.includes('127.0.0.1:8000');
+        const useStatic = isFile || !isBackend;
+        const baseDir = useStatic ? window.location.pathname.replace(/[^/]+$/, '') : '';
         window.APP_PATHS = {
           isFile,
+          isBackend,
+          useStatic,
           baseDir,
-          patient: isFile ? baseDir + 'patient.html' : '/patient',
-          nurse: isFile ? baseDir + 'nurse.html' : '/nurse',
-          nurseLogin: isFile ? baseDir + 'nurse_login.html' : '/nurse/login',
+          patient: useStatic ? baseDir + 'patient.html' : '/patient',
+          nurse: useStatic ? baseDir + 'nurse.html' : '/nurse',
+          nurseLogin: useStatic ? baseDir + 'nurse_login.html' : '/nurse/login',
         };
       })();
     </script>
@@ -104,13 +108,12 @@
           </button>
         </form>
 
-        <!-- Demo credentials -->
-        <div class="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Demo Credentials</p>
-          <div class="space-y-1 text-sm text-slate-600">
-            <p><span class="font-mono bg-slate-200 px-1.5 py-0.5 rounded">NURSE-1001</span> / <span class="font-mono bg-slate-200 px-1.5 py-0.5 rounded">nurse123</span></p>
-            <p><span class="font-mono bg-slate-200 px-1.5 py-0.5 rounded">NURSE-1002</span> / <span class="font-mono bg-slate-200 px-1.5 py-0.5 rounded">nurse123</span></p>
-          </div>
+        <!-- Create Account -->
+        <div class="mt-6">
+          <a id="register-link" href="/nurse/register" class="block w-full py-3 px-4 text-center text-teal-600 font-medium border border-teal-200 rounded-xl hover:bg-teal-50 transition-colors">
+            Create Account
+          </a>
+          <p class="text-xs text-slate-500 mt-2 text-center">Use your staff ID to activate your account.</p>
         </div>
 
         <!-- Back link -->
@@ -129,6 +132,11 @@
       const backLink = document.getElementById('back-to-patient');
       if (backLink && window.APP_PATHS) backLink.href = window.APP_PATHS.patient;
 
+      const registerLink = document.getElementById('register-link');
+      if (registerLink && window.APP_PATHS) {
+        registerLink.href = window.APP_PATHS.useStatic ? window.APP_PATHS.baseDir + 'nurse_register.html' : '/nurse/register';
+      }
+
       // Check if already logged in
       if (AUTH.isAuthenticated()) {
         const user = AUTH.getUser();
@@ -141,6 +149,13 @@
       const errorDiv = document.getElementById('login-error');
       const errorMsg = document.getElementById('error-message');
       const loginBtn = document.getElementById('login-btn');
+      const staffInput = document.getElementById('staff_id');
+
+      if (staffInput) {
+        staffInput.addEventListener('input', (e) => {
+          e.target.value = e.target.value.toUpperCase();
+        });
+      }
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -149,7 +164,7 @@
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Signing in...';
 
-        const staffId = document.getElementById('staff_id').value.trim();
+        const staffId = document.getElementById('staff_id').value.trim().toUpperCase();
         const password = document.getElementById('password').value;
 
         const result = await AUTH.login(staffId, password);

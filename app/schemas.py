@@ -23,12 +23,13 @@ class IntakeCreate(BaseModel):
 
 
 class VitalsCreate(BaseModel):
-    heart_rate: int = Field(ge=0, le=300)
-    respiratory_rate: int = Field(ge=0, le=80)
-    temperature_c: float = Field(ge=25, le=45)
-    spo2: int = Field(ge=0, le=100)
-    systolic_bp: int = Field(ge=0, le=300)
-    diastolic_bp: int = Field(ge=0, le=200)
+    """Vitals with clinically valid ranges."""
+    heart_rate: int = Field(ge=30, le=250, description="Beats per minute (30-250)")
+    respiratory_rate: int = Field(ge=4, le=60, description="Breaths per minute (4-60)")
+    temperature_c: float = Field(ge=32.0, le=43.0, description="Celsius (32-43)")
+    spo2: int = Field(ge=50, le=100, description="Oxygen saturation % (50-100)")
+    systolic_bp: int = Field(ge=50, le=250, description="Systolic mmHg (50-250)")
+    diastolic_bp: int = Field(ge=30, le=150, description="Diastolic mmHg (30-150)")
 
 
 class DecisionUpdate(BaseModel):
@@ -44,6 +45,18 @@ class LoginRequest(BaseModel):
     """Request body for staff login."""
     staff_id: str = Field(min_length=1, max_length=50)
     password: str = Field(min_length=1, max_length=100)
+
+
+class RegisterRequest(BaseModel):
+    """Request body for staff registration/activation."""
+    staff_id: str = Field(
+        min_length=8,
+        max_length=20,
+        description="Staff ID in format NURSE-XXXX or DOC-XXXX"
+    )
+    password: str = Field(min_length=6, max_length=100)
+    full_name: str = Field(min_length=2, max_length=120)
+    role: str | None = Field(default=None, pattern="^(NURSE|DOCTOR)$")
 
 
 class TokenResponse(BaseModel):
@@ -75,30 +88,3 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=120)
 
 
-class RegisterRequest(BaseModel):
-    """
-    Schema for staff self-registration.
-    Staff ID must follow format:
-    - NURSE-XXXX for nurses (e.g., NURSE-1001)
-    - DOC-XXXX for doctors (e.g., DOC-2001)
-    """
-    staff_id: str = Field(
-        min_length=8, 
-        max_length=20,
-        description="Staff ID in format NURSE-XXXX or DOC-XXXX"
-    )
-    password: str = Field(
-        min_length=6, 
-        max_length=100,
-        description="Password must be at least 6 characters"
-    )
-    confirm_password: str = Field(
-        min_length=6, 
-        max_length=100,
-        description="Must match password"
-    )
-    full_name: str = Field(
-        min_length=2, 
-        max_length=120,
-        description="Your full name"
-    )

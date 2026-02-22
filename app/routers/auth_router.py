@@ -27,6 +27,10 @@ NURSE_ID_PATTERN = re.compile(r'^NURSE-\d{4,6}$')  # NURSE-1001 to NURSE-999999
 DOCTOR_ID_PATTERN = re.compile(r'^DOC-\d{4,6}$')   # DOC-2001 to DOC-999999
 
 
+def _normalize_name(value: str) -> str:
+    return " ".join(value.strip().lower().split())
+
+
 def validate_staff_id(staff_id: str) -> tuple[bool, str, str]:
     """
     Validate staff ID format and extract role.
@@ -45,59 +49,64 @@ def validate_staff_id(staff_id: str) -> tuple[bool, str, str]:
 @router.post("/register", response_model=UserInfo)
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
     """
-    Staff self-registration endpoint.
-    
-    Staff ID format:
-    - NURSE-XXXX for nurses (e.g., NURSE-1001, NURSE-2345)
-    - DOC-XXXX for doctors (e.g., DOC-2001, DOC-3456)
-    
-    The role is automatically determined from the Staff ID prefix.
+    Staff registration/activation endpoint.
+
+    Validates staff_id + full_name against preloaded records.
+    If valid and not activated, sets password and activates the account.
     """
-    # Normalize staff_id to uppercase
     staff_id = request.staff_id.upper().strip()
-    
-    # Validate staff ID format and extract role
-    is_valid, role, error_msg = validate_staff_id(staff_id)
+
+    # Validate staff ID format
+    is_valid, expected_role, error_msg = validate_staff_id(staff_id)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_msg
         )
-    
-    # Check passwords match
-    if request.password != request.confirm_password:
+
+    user = db.query(User).filter(User.staff_id == staff_id).first()
+    if user is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Passwords do not match"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Staff ID not found"
         )
-    
-    # Check if staff_id already exists
-    existing_user = db.query(User).filter(User.staff_id == staff_id).first()
-    if existing_user:
+
+    if user.role != expected_role:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Staff ID '{staff_id}' is already registered"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Staff ID does not match the stored role"
         )
-    
-    # Create new user
-    new_user = User(
-        staff_id=staff_id,
-        password_hash=hash_password(request.password),
-        role=role,
-        full_name=request.full_name.strip(),
-        is_active=True
-    )
-    
-    db.add(new_user)
+
+    if request.role and user.role != request.role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Role mismatch for this staff ID"
+        )
+
+    if user.is_active and user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Account already activated"
+        )
+
+    if _normalize_name(user.full_name) != _normalize_name(request.full_name):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Name does not match our records"
+        )
+
+    user.password_hash = hash_password(request.password)
+    user.is_active = True
+
+    db.add(user)
     db.commit()
-    db.refresh(new_user)
-    
+
     return UserInfo(
-        id=new_user.id,
-        staff_id=new_user.staff_id,
-        role=new_user.role,
-        full_name=new_user.full_name,
-        is_active=new_user.is_active,
+        id=user.id,
+        staff_id=user.staff_id,
+        role=user.role,
+        full_name=user.full_name,
+        is_active=user.is_active,
     )
 
 

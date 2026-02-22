@@ -3,7 +3,8 @@
   const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
     ? 'http://localhost:8000' 
     : window.location.origin;
-  const LOGIN_URL = (window.location.protocol === 'file:') ? 'doctor_login.html' : "/doctor/login";
+  const IS_BACKEND = window.location.origin.includes('localhost:8000') || window.location.origin.includes('127.0.0.1:8000');
+  const LOGIN_URL = (!IS_BACKEND || window.location.protocol === 'file:') ? 'doctor_login.html' : "/doctor/login";
   
   console.log('[Doctor.js] Script loaded');
   

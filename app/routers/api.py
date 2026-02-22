@@ -145,6 +145,9 @@ def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(g
             "symptoms": intake.symptoms,
             "duration": intake.duration,
             "severity": intake.severity,
+            "history": intake.history,
+            "medications": intake.medications,
+            "allergies": intake.allergies,
         },
         "vitals": {
             "heart_rate": vitals.heart_rate,
@@ -184,8 +187,19 @@ def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(g
 def update_decision(intake_id: int, payload: DecisionUpdate, db: Session = Depends(get_db), user: User = Depends(require_doctor)):
     """Update decision for an intake. Requires DOCTOR role."""
     intake = db.get(PatientIntake, intake_id)
-    if not intake or not intake.clinical_summary:
-        raise HTTPException(status_code=404, detail="Summary not found")
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake not found")
+    
+    # EC-10: Must have vitals before making decision
+    if not intake.vitals:
+        raise HTTPException(status_code=400, detail="Cannot make decision without vitals")
+    
+    if not intake.clinical_summary:
+        raise HTTPException(status_code=400, detail="Clinical summary not generated yet")
+    
+    # EC-12: Prevent changing decision on completed cases (optional: allow with flag)
+    if intake.workflow_status == "COMPLETED" and intake.clinical_summary.decision != "PENDING":
+        raise HTTPException(status_code=409, detail="Decision already finalized. Contact admin to modify.")
 
     summary: ClinicalSummary = intake.clinical_summary
     summary.decision = payload.decision
@@ -275,32 +289,106 @@ def seed_demo_users(db: Session = Depends(get_db)):
 
     try:
         from ..models import User
-        from ..auth import hash_password
-        
         demo_users = [
             {
                 "staff_id": "NURSE-1001",
-                "password": "nurse123",
                 "role": "NURSE",
                 "full_name": "Nurse Jane Smith"
             },
             {
                 "staff_id": "NURSE-1002",
-                "password": "nurse123",
                 "role": "NURSE",
                 "full_name": "Nurse Mike Johnson"
             },
             {
+                "staff_id": "NURSE-1003",
+                "role": "NURSE",
+                "full_name": "Nurse Alicia Brown"
+            },
+            {
+                "staff_id": "NURSE-1004",
+                "role": "NURSE",
+                "full_name": "Nurse Kevin Lee"
+            },
+            {
+                "staff_id": "NURSE-1005",
+                "role": "NURSE",
+                "full_name": "Nurse Emily Davis"
+            },
+            {
+                "staff_id": "NURSE-1006",
+                "role": "NURSE",
+                "full_name": "Nurse Carlos Rivera"
+            },
+            {
+                "staff_id": "NURSE-1007",
+                "role": "NURSE",
+                "full_name": "Nurse Hannah Clark"
+            },
+            {
+                "staff_id": "NURSE-1008",
+                "role": "NURSE",
+                "full_name": "Nurse Sophia Martinez"
+            },
+            {
+                "staff_id": "NURSE-1009",
+                "role": "NURSE",
+                "full_name": "Nurse Liam White"
+            },
+            {
+                "staff_id": "NURSE-1010",
+                "role": "NURSE",
+                "full_name": "Nurse Olivia Hall"
+            },
+            {
                 "staff_id": "DOC-2001",
-                "password": "doctor123",
                 "role": "DOCTOR",
                 "full_name": "Dr. Sarah Patel"
             },
             {
                 "staff_id": "DOC-2002",
-                "password": "doctor123",
                 "role": "DOCTOR",
                 "full_name": "Dr. James Wilson"
+            },
+            {
+                "staff_id": "DOC-2003",
+                "role": "DOCTOR",
+                "full_name": "Dr. Priya Raman"
+            },
+            {
+                "staff_id": "DOC-2004",
+                "role": "DOCTOR",
+                "full_name": "Dr. Thomas Nguyen"
+            },
+            {
+                "staff_id": "DOC-2005",
+                "role": "DOCTOR",
+                "full_name": "Dr. Aisha Khan"
+            },
+            {
+                "staff_id": "DOC-2006",
+                "role": "DOCTOR",
+                "full_name": "Dr. Ethan Brooks"
+            },
+            {
+                "staff_id": "DOC-2007",
+                "role": "DOCTOR",
+                "full_name": "Dr. Maya Singh"
+            },
+            {
+                "staff_id": "DOC-2008",
+                "role": "DOCTOR",
+                "full_name": "Dr. Noah Turner"
+            },
+            {
+                "staff_id": "DOC-2009",
+                "role": "DOCTOR",
+                "full_name": "Dr. Grace Kim"
+            },
+            {
+                "staff_id": "DOC-2010",
+                "role": "DOCTOR",
+                "full_name": "Dr. Lucas Perez"
             }
         ]
         
@@ -313,10 +401,10 @@ def seed_demo_users(db: Session = Depends(get_db)):
             
             user = User(
                 staff_id=user_data["staff_id"],
-                password_hash=hash_password(user_data["password"]),
+                password_hash="",
                 role=user_data["role"],
                 full_name=user_data["full_name"],
-                is_active=True
+                is_active=False
             )
             db.add(user)
             db.commit()
@@ -331,10 +419,7 @@ def seed_demo_users(db: Session = Depends(get_db)):
             "status": "success",
             "created_users": len(created_users),
             "users": created_users,
-            "credentials": {
-                "nurses": "NURSE-1001 or NURSE-1002 / nurse123",
-                "doctors": "DOC-2001 or DOC-2002 / doctor123"
-            }
+            "activation_required": True
         }
     except Exception as e:
         import traceback

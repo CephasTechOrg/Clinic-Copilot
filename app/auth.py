@@ -198,7 +198,8 @@ def authenticate_user(db: Session, staff_id: str, password: str) -> Optional[Use
     Authenticate a user by staff_id and password.
     Returns the user if valid, None otherwise.
     """
-    user = db.query(User).filter(User.staff_id == staff_id).first()
+    normalized_id = staff_id.strip().upper()
+    user = db.query(User).filter(User.staff_id == normalized_id).first()
     
     if user is None:
         return None

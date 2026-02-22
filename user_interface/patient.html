@@ -4,274 +4,390 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Patient Intake - Clinic Co-Pilot</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1&display=swap" rel="stylesheet" />
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
-              accent: { 500: '#8b5cf6', 600: '#7c3aed' },
+              primary: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' },
+              accent: { 500: '#6366f1', 600: '#4f46e5' },
             },
             fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-out',
-              'slide-up': 'slideUp 0.4s ease-out',
-              'pulse-slow': 'pulse 3s infinite',
-            },
-            keyframes: {
-              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            }
           }
         }
       }
     </script>
     <style>
       body { font-family: 'Inter', sans-serif; }
-      .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-      .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-      .card-hover { transition: all 0.3s ease; }
-      .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -12px rgba(0,0,0,0.15); }
-      input, select, textarea { 
-        border-radius: 12px; 
-        border: 1.5px solid #e2e8f0; 
-        padding: 12px 16px;
+      .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+      
+      /* Form styling */
+      .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 15px;
+        transition: all 0.2s ease;
+        background: white;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+      }
+      .form-input::placeholder { color: #94a3b8; }
+      
+      /* Custom range slider */
+      input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%); cursor: pointer; }
+      input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 2px rgba(0,0,0,0.05); cursor: pointer; }
+      input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); border: none; cursor: pointer; }
+      
+      /* Animations */
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+      @keyframes checkmark { 0% { stroke-dashoffset: 100; } 100% { stroke-dashoffset: 0; } }
+      @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+      .animate-scale-in { animation: scaleIn 0.4s ease-out forwards; }
+      
+      /* Success screen */
+      .success-screen { display: none; }
+      .success-screen.active { display: flex; }
+      .checkmark-path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: checkmark 0.6s ease-out 0.4s forwards; }
+      
+      /* Section cards */
+      .section-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
         transition: all 0.2s ease;
       }
-      input:focus, select:focus, textarea:focus {
-        border-color: #3b82f6;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
-      .progress-bar { transition: width 0.5s ease; }
-      input[type="range"] { -webkit-appearance: none; background: transparent; }
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        height: 20px;
-        width: 20px;
-        border-radius: 50%;
-        background: white;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        margin-top: -8px;
-      }
-      input[type="range"]::-webkit-slider-runnable-track {
-        width: 100%;
-        height: 6px;
-        border-radius: 3px;
-        background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
-      }
+      .section-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+      
+      /* Loading state */
+      .btn-loading { pointer-events: none; }
+      .btn-loading .btn-text { opacity: 0; }
+      .btn-loading .btn-spinner { display: flex; }
+      .btn-spinner { display: none; }
+      
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spinner { animation: spin 1s linear infinite; }
     </style>
   </head>
-  <body class="bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 text-slate-900 min-h-screen">
-    <!-- Decorative Background -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary-200/30 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-accent-500/20 rounded-full blur-3xl"></div>
-    </div>
-
+  <body class="bg-gradient-to-b from-slate-50 to-slate-100 min-h-screen">
+    
     <!-- Header -->
-    <header class="sticky top-0 z-50 glass border-b border-white/20">
-      <div class="max-w-2xl mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center shadow-md">
-              <span class="material-symbols-outlined text-white text-lg">medical_services</span>
+    <header class="sticky top-0 z-50 glass border-b border-slate-200/50">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo -->
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/20">
+              <span class="material-symbols-outlined text-white" style="font-size: 22px;">cardiology</span>
             </div>
-            <h1 class="text-base font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">Clinic Co-Pilot</h1>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs text-slate-400">Step 1/3</span>
-            <div class="flex gap-0.5">
-              <div class="w-6 h-1 rounded-full bg-primary-500"></div>
-              <div class="w-6 h-1 rounded-full bg-slate-200"></div>
-              <div class="w-6 h-1 rounded-full bg-slate-200"></div>
+            <div class="hidden sm:block">
+              <h1 class="text-lg font-bold text-slate-800">Clinic Co-Pilot</h1>
+              <p class="text-xs text-slate-500 -mt-0.5">Patient Intake Form</p>
             </div>
           </div>
+          
+          <!-- Progress indicator (desktop) -->
+          <div class="hidden lg:flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+              <span class="text-sm font-medium text-slate-700">Fill Form</span>
+            </div>
+            <div class="w-6 h-px bg-slate-300"></div>
+            <div class="flex items-center gap-2 opacity-40">
+              <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold">2</div>
+              <span class="text-sm text-slate-500">Nurse</span>
+            </div>
+            <div class="w-6 h-px bg-slate-300"></div>
+            <div class="flex items-center gap-2 opacity-40">
+              <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold">3</div>
+              <span class="text-sm text-slate-500">Doctor</span>
+            </div>
+          </div>
+          
+          <!-- Submit button (header) -->
+          <button id="header-submit" type="submit" form="intake-form" class="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+            <span class="btn-text flex items-center gap-2">
+              <span class="hidden sm:inline">Submit</span>
+              <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
+            </span>
+            <span class="btn-spinner items-center gap-2">
+              <svg class="spinner w-5 h-5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="12"/></svg>
+            </span>
+          </button>
         </div>
+      </div>
+      
+      <!-- Progress bar -->
+      <div class="h-1 bg-slate-100">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-primary-400 to-primary-500 transition-all duration-300" style="width: 0%"></div>
       </div>
     </header>
 
-    <!-- Progress Bar -->
-    <div class="sticky top-[57px] z-40 bg-white/50 backdrop-blur-sm">
-      <div class="max-w-2xl mx-auto px-4 py-1.5">
-        <div class="flex items-center justify-between text-xs mb-1">
-          <span class="font-medium text-slate-600">Progress</span>
-          <span class="font-semibold text-primary-600" id="progress-text">0%</span>
+    <!-- Form Container -->
+    <div id="form-container">
+      <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        
+        <!-- Welcome message -->
+        <div class="text-center mb-8 animate-fade-in-up">
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Welcome to Your Visit</h2>
+          <p class="text-slate-500 max-w-md mx-auto">Please complete this form to help us understand your health concerns. All information is kept confidential.</p>
         </div>
-        <div class="h-1.5 bg-slate-200/50 rounded-full overflow-hidden">
-          <div class="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full progress-bar" id="progress-bar" style="width: 0%"></div>
+
+        <!-- Error message -->
+        <div id="intake-error" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium flex items-center gap-3">
+          <span class="material-symbols-outlined">error</span>
+          <span id="error-text">Please complete all required fields.</span>
         </div>
-      </div>
-    </div>
 
-    <main class="relative max-w-2xl mx-auto px-4 py-6 pb-32">
-      <form id="intake-form" class="space-y-6">
-        <!-- Personal Info Section -->
-        <section class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/50 p-6 space-y-5 animate-slide-up card-hover">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary-600">person</span>
-            </div>
-            <div>
-              <h2 class="font-semibold text-slate-800">Personal Information</h2>
-              <p class="text-xs text-slate-500">Basic demographic details</p>
-            </div>
-          </div>
+        <form id="intake-form" class="space-y-6">
           
-          <div class="grid gap-4 md:grid-cols-2">
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-                Full Name <span class="text-red-400">*</span>
-              </span>
-              <input name="full_name" required type="text" placeholder="John Doe" class="mt-2 w-full bg-white/80" />
-            </label>
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-                Age <span class="text-red-400">*</span>
-              </span>
-              <input name="age" required type="number" min="0" max="130" placeholder="35" class="mt-2 w-full bg-white/80" />
-            </label>
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-                Sex <span class="text-red-400">*</span>
-              </span>
-              <select name="sex" required class="mt-2 w-full bg-white/80">
-                <option value="">Select...</option>
-                <option>Female</option>
-                <option>Male</option>
-                <option>Other</option>
-                <option>Prefer not to say</option>
-              </select>
-            </label>
-            <label class="block md:col-span-2">
-              <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-                Address <span class="text-red-400">*</span>
-              </span>
-              <input name="address" required type="text" placeholder="123 Main Street, City" class="mt-2 w-full bg-white/80" />
-            </label>
-          </div>
-        </section>
+          <!-- Personal Information -->
+          <section class="section-card p-5 sm:p-6 animate-fade-in-up" style="animation-delay: 0.05s">
+            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <span class="material-symbols-outlined text-white">person</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800 text-lg">Personal Information</h3>
+                <p class="text-sm text-slate-500">Your basic details</p>
+              </div>
+            </div>
+            
+            <div class="grid gap-4 sm:gap-5 sm:grid-cols-2">
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  Full Name <span class="text-red-400">*</span>
+                </label>
+                <input name="full_name" type="text" required placeholder="Enter your full name" class="form-input" autocomplete="name" />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  Age <span class="text-red-400">*</span>
+                </label>
+                <input name="age" type="number" required min="0" max="130" placeholder="Years" class="form-input" inputmode="numeric" />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  Sex <span class="text-red-400">*</span>
+                </label>
+                <select name="sex" required class="form-input">
+                  <option value="">Select...</option>
+                  <option value="Female">Female</option>
+                  <option value="Male">Male</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+              
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  Address <span class="text-red-400">*</span>
+                </label>
+                <input name="address" type="text" required placeholder="Street address, City" class="form-input" autocomplete="street-address" />
+              </div>
+            </div>
+          </section>
 
-        <!-- Symptoms Section -->
-        <section class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/50 p-6 space-y-5 animate-slide-up card-hover" style="animation-delay: 0.1s">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-              <span class="material-symbols-outlined text-amber-600">healing</span>
+          <!-- Current Symptoms -->
+          <section class="section-card p-5 sm:p-6 animate-fade-in-up" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <span class="material-symbols-outlined text-white">healing</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800 text-lg">Current Symptoms</h3>
+                <p class="text-sm text-slate-500">Tell us what brings you in today</p>
+              </div>
             </div>
-            <div>
-              <h2 class="font-semibold text-slate-800">Current Symptoms</h2>
-              <p class="text-xs text-slate-500">Describe what you're experiencing</p>
-            </div>
-          </div>
-
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-              Chief Complaint <span class="text-red-400">*</span>
-            </span>
-            <input name="chief_complaint" required type="text" placeholder="Main reason for your visit" class="mt-2 w-full bg-white/80" />
-          </label>
-          
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-              Detailed Symptoms <span class="text-red-400">*</span>
-            </span>
-            <textarea name="symptoms" required rows="3" placeholder="Please describe your symptoms in detail..." class="mt-2 w-full bg-white/80 resize-none"></textarea>
-          </label>
-          
-          <div class="grid gap-4 md:grid-cols-2">
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700 flex items-center gap-1">
-                Duration <span class="text-red-400">*</span>
-              </span>
-              <input name="duration" required type="text" placeholder="e.g., 2 days, 1 week" class="mt-2 w-full bg-white/80" />
-            </label>
-            <div class="block">
-              <span class="text-sm font-medium text-slate-700 flex items-center justify-between">
-                <span class="flex items-center gap-1">Severity <span class="text-red-400">*</span></span>
-                <span class="text-primary-600 font-semibold" id="severity-display">5/10</span>
-              </span>
-              <div class="mt-3 relative">
-                <input name="severity" id="severity" required type="range" min="1" max="10" value="5" class="w-full h-2 rounded-full cursor-pointer" />
-                <div class="flex justify-between text-xs text-slate-400 mt-2">
-                  <span>Mild</span>
-                  <span>Moderate</span>
-                  <span>Severe</span>
+            
+            <div class="space-y-4 sm:space-y-5">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  Chief Complaint <span class="text-red-400">*</span>
+                </label>
+                <input name="chief_complaint" type="text" required placeholder="Main reason for your visit (e.g., headache, chest pain)" class="form-input" />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">
+                  Describe Your Symptoms <span class="text-red-400">*</span>
+                </label>
+                <textarea name="symptoms" required rows="4" placeholder="Please describe what you're experiencing in detail. Include when it started, what makes it better or worse, and any other relevant information..." class="form-input resize-none"></textarea>
+              </div>
+              
+              <div class="grid gap-4 sm:gap-5 sm:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">
+                    Duration <span class="text-red-400">*</span>
+                  </label>
+                  <input name="duration" type="text" required placeholder="e.g., 2 days, 1 week" class="form-input" />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">
+                    <span class="flex items-center justify-between">
+                      <span>Pain/Severity <span class="text-red-400">*</span></span>
+                      <span id="severity-display" class="text-primary-600 font-bold text-base">5/10</span>
+                    </span>
+                  </label>
+                  <div class="pt-2">
+                    <input name="severity" id="severity" type="range" required min="1" max="10" value="5" class="w-full" />
+                    <div class="flex justify-between text-xs text-slate-400 mt-2 px-1">
+                      <span>Mild</span>
+                      <span>Moderate</span>
+                      <span>Severe</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Medical History Section -->
-        <section class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/50 p-6 space-y-5 animate-slide-up card-hover" style="animation-delay: 0.2s">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-              <span class="material-symbols-outlined text-emerald-600">history</span>
+          <!-- Medical History -->
+          <section class="section-card p-5 sm:p-6 animate-fade-in-up" style="animation-delay: 0.15s">
+            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <span class="material-symbols-outlined text-white">history</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800 text-lg">Medical History</h3>
+                <p class="text-sm text-slate-500">Optional but helpful for your care</p>
+              </div>
             </div>
-            <div>
-              <h2 class="font-semibold text-slate-800">Medical History</h2>
-              <p class="text-xs text-slate-500">Help us understand your background</p>
+            
+            <div class="space-y-4 sm:space-y-5">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Pre-existing Conditions</label>
+                <textarea name="history" rows="2" placeholder="e.g., Diabetes, Hypertension, Asthma, Heart disease..." class="form-input resize-none"></textarea>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Current Medications</label>
+                <textarea name="medications" rows="2" placeholder="List any medications, vitamins, or supplements you take regularly..." class="form-input resize-none"></textarea>
+              </div>
+              
+              <div>
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <span>Known Allergies</span>
+                  <span class="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded-full">Important</span>
+                </label>
+                <textarea name="allergies" rows="2" placeholder="e.g., Penicillin, Aspirin, Latex, Peanuts..." class="form-input resize-none border-red-200 focus:border-red-400 focus:ring-red-100"></textarea>
+              </div>
             </div>
+          </section>
+
+          <!-- Privacy & Submit -->
+          <div class="animate-fade-in-up" style="animation-delay: 0.2s">
+            <!-- Privacy notice -->
+            <div class="flex items-start gap-3 p-4 bg-primary-50 border border-primary-100 rounded-xl mb-6">
+              <span class="material-symbols-outlined text-primary-500 mt-0.5">shield</span>
+              <p class="text-sm text-primary-700">Your information is encrypted and shared only with your healthcare team. We follow strict HIPAA privacy guidelines.</p>
+            </div>
+            
+            <!-- Mobile submit button -->
+            <button id="submit-intake" type="submit" class="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="btn-text flex items-center gap-2">
+                <span>Submit to Healthcare Provider</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </span>
+              <span class="btn-spinner items-center gap-2">
+                <svg class="spinner w-6 h-6" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="12"/></svg>
+                <span>Submitting...</span>
+              </span>
+            </button>
+            
+            <p class="text-center text-xs text-slate-400 mt-4">Fields marked with <span class="text-red-400">*</span> are required</p>
           </div>
+        </form>
+      </main>
+    </div>
 
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Pre-existing Conditions</span>
-            <textarea name="history" rows="2" placeholder="e.g., Diabetes, Hypertension, Asthma..." class="mt-2 w-full bg-white/80 resize-none"></textarea>
-          </label>
-          
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Current Medications</span>
-            <textarea name="medications" rows="2" placeholder="List any medications you're currently taking..." class="mt-2 w-full bg-white/80 resize-none"></textarea>
-          </label>
-          
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700 flex items-center gap-2">
-              Known Allergies
-              <span class="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded-full">Important</span>
-            </span>
-            <textarea name="allergies" rows="2" placeholder="e.g., Penicillin, Sulfa drugs, Latex..." class="mt-2 w-full bg-white/80 resize-none border-red-200 focus:border-red-400"></textarea>
-          </label>
-        </section>
-
-        <!-- Privacy Notice -->
-        <div class="flex items-start gap-3 p-4 bg-primary-50/50 border border-primary-100 rounded-xl">
-          <span class="material-symbols-outlined text-primary-500 text-xl mt-0.5">shield</span>
-          <p class="text-sm text-primary-700">Your information is encrypted and shared only with your healthcare team. We follow strict privacy guidelines.</p>
+    <!-- Success Screen -->
+    <div id="success-screen" class="success-screen fixed inset-0 bg-gradient-to-b from-emerald-50 via-white to-white flex-col items-center justify-center p-6 z-50 overflow-auto">
+      <div class="text-center max-w-md mx-auto py-12">
+        <!-- Animated checkmark -->
+        <div class="w-28 h-28 mx-auto mb-8 animate-scale-in">
+          <svg class="w-full h-full" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+            <path d="M28 52 L42 66 L72 36" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" class="checkmark-path"/>
+          </svg>
         </div>
-      </form>
-    </main>
-
-    <!-- Fixed Bottom Action -->
-    <div class="fixed bottom-0 left-0 right-0 glass border-t border-white/30 p-4 z-50">
-      <div class="max-w-2xl mx-auto">
-        <div class="text-center text-sm text-red-500 font-medium hidden" id="intake-error"></div>
-        <div class="text-center text-sm text-emerald-600 font-medium hidden" id="intake-success"></div>
-        <button id="submit-intake" type="submit" form="intake-form" class="w-full gradient-bg text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-          <span class="material-symbols-outlined">send</span>
-          <span>Submit to Healthcare Provider</span>
-        </button>
+        
+        <!-- Success message -->
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-3 animate-fade-in-up" style="animation-delay: 0.2s">Successfully Submitted!</h2>
+        <p class="text-lg text-slate-600 mb-8 animate-fade-in-up" style="animation-delay: 0.3s">Your information has been sent to our nursing staff for review.</p>
+        
+        <!-- Queue info card -->
+        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 mb-8 border border-slate-100 text-left animate-fade-in-up" style="animation-delay: 0.4s">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-primary-500 text-2xl">schedule</span>
+            <span class="text-lg font-semibold text-slate-700">What happens next?</span>
+          </div>
+          <ol class="space-y-4 text-sm text-slate-600">
+            <li class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+              <span>A nurse will review your information and take your vitals</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+              <span>Our AI assistant will prepare a clinical summary</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+              <span>A doctor will review your case and provide recommendations</span>
+            </li>
+          </ol>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="space-y-3 animate-fade-in-up" style="animation-delay: 0.5s">
+          <button id="new-intake-btn" class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+            <span class="material-symbols-outlined">add</span>
+            <span>Submit Another Patient</span>
+          </button>
+          <p class="text-xs text-slate-400">For a different patient or family member</p>
+        </div>
+      </div>
+      
+      <!-- Footer branding -->
+      <div class="text-center mt-auto pb-6">
+        <div class="flex items-center justify-center gap-2 text-slate-400">
+          <span class="material-symbols-outlined text-lg">cardiology</span>
+          <span class="text-sm font-medium">Clinic Co-Pilot</span>
+        </div>
       </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-4 right-4 transform translate-x-[120%] transition-transform duration-300 z-[100]">
-      <div class="bg-white rounded-xl shadow-2xl border border-slate-100 p-4 flex items-center gap-3 min-w-[300px]">
+    <!-- Toast Notification (hidden by default) -->
+    <div id="toast" class="fixed top-20 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto transform -translate-y-40 opacity-0 pointer-events-none transition-all duration-300 z-[100]">
+      <div class="bg-white rounded-xl shadow-2xl border border-slate-100 p-4 flex items-center gap-3 sm:min-w-[320px]">
         <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0" id="toast-icon-wrapper">
           <span class="material-symbols-outlined text-emerald-600" id="toast-icon">check_circle</span>
         </div>
-        <div>
-          <p class="font-semibold text-slate-800" id="toast-title">Success</p>
-          <p class="text-sm text-slate-500" id="toast-message">Form submitted successfully</p>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-slate-800" id="toast-title"></p>
+          <p class="text-sm text-slate-500 truncate" id="toast-message"></p>
         </div>
       </div>
     </div>
 
+    <!-- Success screen placeholder for JS -->
+    <div id="intake-success" class="hidden"></div>
+
     <script>
-      // Toast function (must be defined before patient.js loads)
+      // Toast function
       window.showToast = function(title, message, isError = false) {
         const toast = document.getElementById('toast');
         const toastTitle = document.getElementById('toast-title');
@@ -292,16 +408,39 @@
           toastIcon.className = 'material-symbols-outlined text-emerald-600';
         }
         
-        toast.classList.remove('translate-x-[120%]');
-        toast.classList.add('translate-x-0');
+        // Show toast
+        toast.classList.remove('-translate-y-40', 'opacity-0', 'pointer-events-none');
+        toast.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
         
         setTimeout(() => {
-          toast.classList.remove('translate-x-0');
-          toast.classList.add('translate-x-[120%]');
+          // Hide toast
+          toast.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+          toast.classList.add('-translate-y-40', 'opacity-0', 'pointer-events-none');
         }, 4000);
       };
+      
+      // Show success screen (called by patient.js on success)
+      window.showSuccessScreen = function() {
+        document.getElementById('form-container').style.display = 'none';
+        document.getElementById('success-screen').classList.add('active');
+        window.scrollTo(0, 0);
+      };
+      
+      // Reset to form
+      document.getElementById('new-intake-btn')?.addEventListener('click', function() {
+        document.getElementById('success-screen').classList.remove('active');
+        document.getElementById('form-container').style.display = 'block';
+        document.getElementById('intake-form').reset();
+        document.getElementById('progress-bar').style.width = '0%';
+        document.getElementById('severity-display').textContent = '5/10';
+        // Reset button states
+        document.querySelectorAll('.btn-loading').forEach(btn => btn.classList.remove('btn-loading'));
+        window.scrollTo(0, 0);
+      });
     </script>
-    <script src="../static/js/patient.js?v=5"></script>
+    
+    <script src="../static/js/patient.js?v=7"></script>
+    
     <script>
       // Severity slider display
       const severitySlider = document.getElementById('severity');
@@ -315,22 +454,35 @@
       // Progress bar calculation
       const form = document.getElementById('intake-form');
       const progressBar = document.getElementById('progress-bar');
-      const progressText = document.getElementById('progress-text');
       const requiredFields = form.querySelectorAll('[required]');
       
       function updateProgress() {
         let filled = 0;
         requiredFields.forEach(field => {
-          if (field.value.trim()) filled++;
+          if (field.value && field.value.toString().trim()) filled++;
         });
         const percentage = Math.round((filled / requiredFields.length) * 100);
         progressBar.style.width = percentage + '%';
-        progressText.textContent = percentage + '%';
       }
       
       requiredFields.forEach(field => {
         field.addEventListener('input', updateProgress);
         field.addEventListener('change', updateProgress);
+      });
+      
+      // Sync header submit with main form
+      const headerSubmit = document.getElementById('header-submit');
+      const mainSubmit = document.getElementById('submit-intake');
+      
+      headerSubmit?.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('intake-form').requestSubmit();
+      });
+      
+      // Add loading state to buttons on form submit
+      form.addEventListener('submit', function() {
+        headerSubmit?.classList.add('btn-loading');
+        mainSubmit?.classList.add('btn-loading');
       });
     </script>
   </body>

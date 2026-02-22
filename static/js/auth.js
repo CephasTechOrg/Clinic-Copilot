@@ -46,10 +46,44 @@ const AUTH = {
   },
   
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated (token exists and not expired)
    */
   isAuthenticated() {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+    
+    // Check if token is expired by decoding JWT
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // Convert to milliseconds
+      if (Date.now() >= expiry) {
+        console.log('[AUTH] Token expired, clearing auth');
+        this.clearAuth();
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('[AUTH] Invalid token format');
+      this.clearAuth();
+      return false;
+    }
+  },
+  
+  /**
+   * Check remaining session time in minutes
+   */
+  getSessionTimeRemaining() {
+    const token = this.getToken();
+    if (!token) return 0;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000;
+      const remaining = Math.max(0, expiry - Date.now());
+      return Math.floor(remaining / 60000); // Return minutes
+    } catch (e) {
+      return 0;
+    }
   },
   
   /**

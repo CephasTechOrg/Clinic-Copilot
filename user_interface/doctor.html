@@ -7,13 +7,17 @@
     <script>
       (function() {
         const isFile = window.location.protocol === 'file:';
-        const baseDir = isFile ? window.location.pathname.replace(/[^/]+$/, '') : '';
+        const isBackend = window.location.origin.includes('localhost:8000') || window.location.origin.includes('127.0.0.1:8000');
+        const useStatic = isFile || !isBackend;
+        const baseDir = useStatic ? window.location.pathname.replace(/[^/]+$/, '') : '';
         window.APP_PATHS = {
           isFile,
+          isBackend,
+          useStatic,
           baseDir,
-          patient: isFile ? baseDir + 'patient.html' : '/patient',
-          doctor: isFile ? baseDir + 'doctor.html' : '/doctor',
-          doctorLogin: isFile ? baseDir + 'doctor_login.html' : '/doctor/login',
+          patient: useStatic ? baseDir + 'patient.html' : '/patient',
+          doctor: useStatic ? baseDir + 'doctor.html' : '/doctor',
+          doctorLogin: useStatic ? baseDir + 'doctor_login.html' : '/doctor/login',
         };
       })();
     </script>

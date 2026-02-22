@@ -26,6 +26,7 @@
 - [x] Fix mojibake/encoding artifacts in UI and seed data (e.g., `Â°C`, `â€¢`, `â†`)
 - [x] Allow committing `.env.example` by removing it from `.gitignore`
 - [ ] Add at least a basic smoke test (currently empty)
+- [x] Controlled registration: validate staff ID + name against preloaded records before activation
 
 ## 3) Project Structure
 

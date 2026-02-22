@@ -82,8 +82,13 @@
       const data = await res.json();
       console.log('[Patient.js] API response:', data);
       
-      // Show success toast with proper message
-      if (window.showToast) {
+      // Remove loading state from buttons
+      document.querySelectorAll('.btn-loading').forEach(btn => btn.classList.remove('btn-loading'));
+      
+      // Show success screen if available, otherwise show toast
+      if (window.showSuccessScreen) {
+        window.showSuccessScreen();
+      } else if (window.showToast) {
         window.showToast('Success!', 'Data successfully submitted to Nurse');
       }
       
@@ -108,6 +113,8 @@
       
     } catch (err) {
       console.error('[Patient.js] Error:', err);
+      // Remove loading state from buttons on error
+      document.querySelectorAll('.btn-loading').forEach(btn => btn.classList.remove('btn-loading'));
       if (window.showToast) {
         window.showToast('Submission Failed', 'Please check your connection and try again.', true);
       }

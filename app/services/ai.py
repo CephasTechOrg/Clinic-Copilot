@@ -11,6 +11,7 @@ This module:
 import os
 import json
 from typing import Dict, Any
+from pathlib import Path
 from dotenv import load_dotenv
 try:
     import google.generativeai as genai
@@ -29,6 +30,24 @@ if GEMINI_API_KEY and genai:
 
 # Use fast Gemini model (good balance for hackathon)
 MODEL_NAME = "gemini-1.5-flash"
+
+PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+
+def _load_prompt(name: str) -> str | None:
+    path = PROMPT_DIR / name
+    try:
+        text = path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return None
+    return text if text else None
+
+
+def _render_prompt(template: str, context: dict[str, Any]) -> str:
+    rendered = template
+    for key, value in context.items():
+        rendered = rendered.replace(f"{{{{{key}}}}}", str(value))
+    return rendered
 
 
 def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -93,10 +112,42 @@ def build_prompt(payload: Dict[str, Any]) -> str:
     """
     Build structured clinical prompt.
     Forces Gemini to respond ONLY in JSON.
+    EC-08: Normalize empty fields to "None reported"
     """
 
     intake = payload["intake"]
     vitals = payload["vitals"]
+    
+    # Normalize empty optional fields
+    history = intake.get('history', '').strip() or "None reported"
+    medications = intake.get('medications', '').strip() or "None reported"
+    allergies = intake.get('allergies', '').strip() or "None reported"
+
+    base = _load_prompt("intake_summary.md")
+    red_flags_guidance = _load_prompt("red_flags.md") or ""
+
+    context = {
+        "full_name": intake.get("full_name", ""),
+        "age": intake.get("age", ""),
+        "sex": intake.get("sex", ""),
+        "chief_complaint": intake.get("chief_complaint", ""),
+        "symptoms": intake.get("symptoms", ""),
+        "duration": intake.get("duration", ""),
+        "severity": intake.get("severity", ""),
+        "history": history,
+        "medications": medications,
+        "allergies": allergies,
+        "heart_rate": vitals.get("heart_rate", ""),
+        "respiratory_rate": vitals.get("respiratory_rate", ""),
+        "temperature_c": vitals.get("temperature_c", ""),
+        "spo2": vitals.get("spo2", ""),
+        "systolic_bp": vitals.get("systolic_bp", ""),
+        "diastolic_bp": vitals.get("diastolic_bp", ""),
+        "red_flags_guidance": red_flags_guidance,
+    }
+
+    if base:
+        return _render_prompt(base, context)
 
     return f"""
 You are a clinical decision-support assistant.
@@ -122,13 +173,16 @@ Chief Complaint: {intake['chief_complaint']}
 Symptoms: {intake['symptoms']}
 Duration: {intake['duration']}
 Severity: {intake['severity']}
+Medical History: {history}
+Current Medications: {medications}
+Allergies: {allergies}
 
 VITALS:
-Heart Rate: {vitals['heart_rate']}
-Respiratory Rate: {vitals['respiratory_rate']}
-Temperature (C): {vitals['temperature_c']}
-SpO2: {vitals['spo2']}
-Blood Pressure: {vitals['systolic_bp']}/{vitals['diastolic_bp']}
+Heart Rate: {vitals['heart_rate']} bpm
+Respiratory Rate: {vitals['respiratory_rate']} /min
+Temperature: {vitals['temperature_c']} C
+SpO2: {vitals['spo2']}%
+Blood Pressure: {vitals['systolic_bp']}/{vitals['diastolic_bp']} mmHg
 
 Important:
 - Escalate to HIGH priority if vitals are critically abnormal.
@@ -165,3 +219,4 @@ def fallback_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
         "recommended_questions": ["Expand review of systems."],
         "recommended_next_steps": ["Follow hospital triage protocol."],
     }
+

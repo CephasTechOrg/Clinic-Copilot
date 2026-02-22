@@ -3,7 +3,8 @@
   const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
     ? 'http://localhost:8000' 
     : window.location.origin;
-  const LOGIN_URL = (window.location.protocol === 'file:') ? 'nurse_login.html' : "/nurse/login";
+  const IS_BACKEND = window.location.origin.includes('localhost:8000') || window.location.origin.includes('127.0.0.1:8000');
+  const LOGIN_URL = (!IS_BACKEND || window.location.protocol === 'file:') ? 'nurse_login.html' : "/nurse/login";
   
   console.log('[Nurse.js] Script loaded');
   
