@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nurse Vitals Dashboard - Clinic Co-Pilot</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d6cf2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen overflow-hidden">
+<div class="flex h-full w-full">
+<!-- Sidebar Navigation -->
+<aside class="w-16 md:w-20 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col items-center py-6 gap-8 z-20">
+<div class="text-primary mb-4">
+<span class="material-symbols-outlined text-3xl font-bold">medical_services</span>
+</div>
+<nav class="flex flex-col gap-6">
+<a class="group relative flex items-center justify-center p-3 rounded-xl bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined">groups</span>
+<div class="absolute left-16 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">Patient Queue</div>
+</a>
+<a class="group relative flex items-center justify-center p-3 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">vital_signs</span>
+<div class="absolute left-16 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">Add Vitals</div>
+</a>
+<a class="group relative flex items-center justify-center p-3 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<div class="absolute left-16 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">Summaries</div>
+</a>
+<a class="group relative flex items-center justify-center p-3 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</nav>
+<div class="mt-auto">
+<div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden border-2 border-primary/20">
+<img class="w-full h-full object-cover" data-alt="Portrait of a healthcare professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8SZOLSmXjwZspQu687QqHChUloCzqFF4iIjNgvZz4wnnwCYuwfqha5fIa7vNLV0g5kuIyqRm98_21eJ3qx5aVYMhhgYdf99gzmK-5a2xiP51JJabXRcZkmRiRs061Mmt_2FQKBnSdd-fnwqsqlhI2y6b0sLANZEXsuhT8k76Ym8b8vxbcjG0G3H3lTUUQRIAZrMVn9gtrUk9gbFiwswFrPsijnPIL2zT33DygVB0U9G2g1PpS5291N_Qc3WWuqiVcwXxi7b4C2904"/>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden relative">
+<!-- Top App Bar -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0">
+<div class="flex items-center gap-3">
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Clinic Co-Pilot</h1>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Nurse Station</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+<div class="hidden sm:block text-right">
+<p class="text-xs font-semibold">Nurse Sarah J.</p>
+<p class="text-[10px] text-slate-500">Unit 4-B</p>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-scrollbar">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Active Patient Queue</h2>
+<p class="text-sm text-slate-500">4 patients awaiting triage/vitals</p>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                        Filter
+                    </button>
+</div>
+<!-- Patient List (Mobile Optimized Cards) -->
+<div class="grid gap-4">
+<!-- Patient Row 1 -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-slate-400">person</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">John Doe, 45</h3>
+<p class="text-xs text-slate-500 mb-1">Chief Complaint: <span class="text-slate-700 dark:text-slate-300 font-medium">Chest Pain</span></p>
+<div class="flex items-center gap-2">
+<span class="text-[10px] bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded font-bold uppercase tracking-tight">Priority 1</span>
+<span class="text-[10px] text-slate-400 flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> 12 mins ago</span>
+</div>
+</div>
+</div>
+<button class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-primary/90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                            Vitals
+                        </button>
+</div>
+<!-- Patient Row 2 -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-slate-400">person</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Jane Smith, 28</h3>
+<p class="text-xs text-slate-500 mb-1">Chief Complaint: <span class="text-slate-700 dark:text-slate-300 font-medium">Severe Headache</span></p>
+<div class="flex items-center gap-2">
+<span class="text-[10px] bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded font-bold uppercase tracking-tight">Priority 2</span>
+<span class="text-[10px] text-slate-400 flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> 25 mins ago</span>
+</div>
+</div>
+</div>
+<button class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-primary/90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                            Vitals
+                        </button>
+</div>
+<!-- Patient Row 3 -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-slate-400">person</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Robert Lee, 62</h3>
+<p class="text-xs text-slate-500 mb-1">Chief Complaint: <span class="text-slate-700 dark:text-slate-300 font-medium">Chronic Cough</span></p>
+<div class="flex items-center gap-2">
+<span class="text-[10px] bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded font-bold uppercase tracking-tight">Routine</span>
+<span class="text-[10px] text-slate-400 flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> 42 mins ago</span>
+</div>
+</div>
+</div>
+<button class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-primary/90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                            Vitals
+                        </button>
+</div>
+</div>
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Queue Time</p>
+<p class="text-2xl font-bold text-primary">18m</p>
+<p class="text-[10px] text-green-500 flex items-center mt-1"><span class="material-symbols-outlined text-xs">trending_down</span> -2m from avg</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Completed</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">12/15</p>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full mt-2">
+<div class="bg-primary h-full w-[80%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Vitals Entry Side Panel / Overlay (Platform iOS feel) -->
+<div class="absolute inset-y-0 right-0 w-full sm:w-96 bg-white dark:bg-slate-900 shadow-2xl z-30 transform transition-transform duration-300 border-l border-slate-200 dark:border-slate-800 flex flex-col">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-primary/5">
+<div>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Vitals Entry</h2>
+<p class="text-xs text-slate-500 font-medium">Patient: John Doe, 45</p>
+</div>
+<button class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full text-slate-400">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-5 no-scrollbar">
+<!-- Heart Rate -->
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                            Heart Rate
+                            <span class="text-[10px] text-slate-400">bpm</span>
+</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium" placeholder="72" type="number"/>
+</div>
+<!-- Blood Pressure -->
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                            Blood Pressure
+                            <span class="text-[10px] text-slate-400">mmHg</span>
+</label>
+<div class="grid grid-cols-2 gap-3">
+<div class="relative">
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium" placeholder="120" type="number"/>
+<span class="absolute right-3 top-3.5 text-[10px] font-bold text-slate-400">SYS</span>
+</div>
+<div class="relative">
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium" placeholder="80" type="number"/>
+<span class="absolute right-3 top-3.5 text-[10px] font-bold text-slate-400">DIA</span>
+</div>
+</div>
+</div>
+<!-- Temperature & SpO2 Grid -->
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                                Temp
+                                <span class="text-[10px] text-slate-400">°C</span>
+</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium" placeholder="36.6" step="0.1" type="number"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                                SpO2
+                                <span class="text-[10px] text-slate-400">%</span>
+</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium" placeholder="98" type="number"/>
+</div>
+</div>
+<!-- Respiratory Rate -->
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                            Resp. Rate
+                            <span class="text-[10px] text-slate-400">breaths/min</span>
+</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium" placeholder="16" type="number"/>
+</div>
+<!-- Quick Vitals Note -->
+<div class="space-y-1.5 pt-2">
+<label class="text-xs font-bold text-slate-500 uppercase">Nursing Observation</label>
+<textarea class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm min-h-[80px] resize-none" placeholder="Any notable observations..."></textarea>
+</div>
+</div>
+<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col gap-3">
+<button class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
+<span class="material-symbols-outlined">auto_awesome</span>
+                        Save &amp; Generate AI Summary
+                    </button>
+<button class="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold py-4 rounded-xl transition-colors hover:bg-slate-200">
+                        Skip to Intake
+                    </button>
+</div>
+</div>
+<!-- Mobile FAB for adding new patient (Optional for dashboard feel) -->
+<button class="sm:hidden absolute bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center z-40 transition-transform active:scale-90">
+<span class="material-symbols-outlined text-3xl">person_add</span>
+</button>
+</main>
+</div>
+</body></html>
