@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Case Review</h1>
+
+<div class="card">
+  <h2>{{ intake.full_name }} ({{ intake.age }} y/o, {{ intake.sex }})</h2>
+  <p><strong>Chief complaint:</strong> {{ intake.chief_complaint }}</p>
+
+  <div class="split">
+    <div>
+      <h3>AI Summary</h3>
+      <p>{{ intake.clinical_summary.short_summary }}</p>
+
+      <h3>Priority</h3>
+      <p><span class="pill {{ intake.clinical_summary.priority_level|lower }}">{{ intake.clinical_summary.priority_level }}</span></p>
+
+      <h3>Red Flags</h3>
+      <pre class="pre">{{ intake.clinical_summary.red_flags }}</pre>
+    </div>
+
+    <div>
+      <h3>Differential Considerations</h3>
+      <pre class="pre">{{ intake.clinical_summary.differential }}</pre>
+
+      <h3>Recommended Questions</h3>
+      <pre class="pre">{{ intake.clinical_summary.recommended_questions }}</pre>
+
+      <h3>Next Steps</h3>
+      <pre class="pre">{{ intake.clinical_summary.recommended_next_steps }}</pre>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Doctor Decision</h2>
+  <form method="post" action="/doctor/case/{{ intake.id }}/decision">
+    <label>Doctor note<textarea name="doctor_note" rows="4">{{ intake.clinical_summary.doctor_note }}</textarea></label>
+
+    <div class="row">
+      <button class="btn" name="decision" value="ADMIT" type="submit">Admit</button>
+      <button class="btn secondary" name="decision" value="NOT_ADMIT" type="submit">Not Admit</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

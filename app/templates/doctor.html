@@ -1,0 +1,37 @@
+{% extends "base.html" %} {% block content %}
+<h1>Doctor Dashboard</h1>
+<p class="muted">Cases with AI summaries ready for review.</p>
+
+<div class="card">
+  {% if cases|length == 0 %}
+  <p>No summarized cases yet. Provider should add vitals first.</p>
+  {% else %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Patient</th>
+        <th>Complaint</th>
+        <th>Priority</th>
+        <th>Decision</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in cases %}
+      <tr>
+        <td>{{ c.full_name }} ({{ c.age }})</td>
+        <td>{{ c.chief_complaint }}</td>
+        <td>
+          <span class="pill {{ c.clinical_summary.priority_level|lower }}">
+            {{ c.clinical_summary.priority_level }}
+          </span>
+        </td>
+        <td>{{ c.clinical_summary.decision }}</td>
+        <td><a class="btn small" href="/doctor/case/{{ c.id }}">Open</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

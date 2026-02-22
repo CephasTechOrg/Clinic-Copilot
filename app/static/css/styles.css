@@ -1,0 +1,38 @@
+body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #f6f7fb; }
+.topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#111827; color:#fff; }
+.brand { font-weight: 700; letter-spacing: 0.3px; }
+.nav a { color:#cbd5e1; text-decoration:none; margin-left:14px; }
+.nav a:hover { color:#fff; }
+
+.container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+.footer { text-align:center; padding: 18px; color:#6b7280; }
+
+h1 { margin: 0 0 10px; }
+.muted { color:#6b7280; margin-top: 0; }
+
+.card { background:#fff; border-radius: 12px; padding: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.06); margin: 14px 0; }
+label { display:block; font-weight:600; margin: 10px 0; }
+input, textarea { width:100%; padding:10px; border: 1px solid #e5e7eb; border-radius: 10px; font-weight: 500; box-sizing:border-box; }
+textarea { resize: vertical; }
+
+.grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+
+.btn { display:inline-block; padding: 10px 14px; border-radius: 10px; border: none; cursor:pointer; background:#2563eb; color:#fff; font-weight:700; text-decoration:none; }
+.btn:hover { filter: brightness(0.95); }
+.btn.secondary { background:#374151; }
+.btn.small { padding: 7px 10px; font-size: 14px; }
+
+.table { width:100%; border-collapse: collapse; }
+.table th, .table td { border-bottom: 1px solid #eef2f7; padding: 10px; text-align:left; }
+
+.pill { padding: 5px 10px; border-radius: 999px; font-weight: 800; font-size: 12px; display:inline-block; }
+.pill.low { background:#dcfce7; color:#166534; }
+.pill.med { background:#fef9c3; color:#854d0e; }
+.pill.high { background:#fee2e2; color:#991b1b; }
+
+.pre { white-space: pre-wrap; background:#f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #eef2f7; }
+
+.row { display:flex; gap: 10px; }
+.split { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
