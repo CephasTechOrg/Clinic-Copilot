@@ -58,6 +58,21 @@ def _ensure_doctor_status_columns() -> None:
         if "doctor_status_updated_at" not in col_names:
             conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN doctor_status_updated_at DATETIME"))
 
+        if "preferred_language" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN preferred_language VARCHAR(10) DEFAULT 'en'"))
+        if "chief_complaint_original" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN chief_complaint_original TEXT"))
+        if "symptoms_original" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN symptoms_original TEXT"))
+        if "duration_original" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN duration_original VARCHAR(80)"))
+        if "history_original" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN history_original TEXT"))
+        if "medications_original" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN medications_original TEXT"))
+        if "allergies_original" not in col_names:
+            conn.execute(text("ALTER TABLE patient_intakes ADD COLUMN allergies_original TEXT"))
+
         # Normalize existing decisions into doctor_status
         conn.execute(text("""
             UPDATE patient_intakes
@@ -86,4 +101,3 @@ def _ensure_doctor_status_columns() -> None:
                 ELSE 'PENDING'
             END;
         """))
-

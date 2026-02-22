@@ -51,6 +51,15 @@ class PatientIntake(Base):
     medications: Mapped[str] = mapped_column(Text, default="")
     allergies: Mapped[str] = mapped_column(Text, default="")
 
+    # Patient language + original text (for multilingual intake)
+    preferred_language: Mapped[str] = mapped_column(String(10), default="en")
+    chief_complaint_original: Mapped[str] = mapped_column(Text, default="")
+    symptoms_original: Mapped[str] = mapped_column(Text, default="")
+    duration_original: Mapped[str] = mapped_column(String(80), default="")
+    history_original: Mapped[str] = mapped_column(Text, default="")
+    medications_original: Mapped[str] = mapped_column(Text, default="")
+    allergies_original: Mapped[str] = mapped_column(Text, default="")
+
     # Workflow status: PENDING_NURSE -> PENDING_DOCTOR -> COMPLETED
     workflow_status: Mapped[str] = mapped_column(String(30), default="PENDING_NURSE")
     # Doctor workflow status: PENDING -> ADMITTED / APPROVED / DELAYED

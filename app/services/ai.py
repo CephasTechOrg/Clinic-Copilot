@@ -10,6 +10,7 @@ This module:
 
 import os
 import json
+import logging
 from typing import Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
@@ -21,7 +22,9 @@ except ModuleNotFoundError:
 from .triage_rules import rule_based_flags
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
+
+logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -36,6 +39,47 @@ if GEMINI_API_KEY and genai:
         GENAI_CLIENT = None
 
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+LANGUAGE_NAMES = {
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "ar": "Arabic",
+    "pt": "Portuguese",
+}
+
+
+def language_name(code_or_name: str) -> str:
+    if not code_or_name:
+        return "English"
+    code = code_or_name.strip().lower()
+    return LANGUAGE_NAMES.get(code, code_or_name)
+
+
+def translate_text(text: str, target_language: str) -> str:
+    if not text or not str(text).strip():
+        return text
+    if not GEMINI_API_KEY or not genai or not GENAI_CLIENT:
+        return text
+    language = language_name(target_language)
+    prompt = (
+        f"Translate the following text to {language}. "
+        "Return only the translated text with no extra commentary.\n\n"
+        f"Text:\n{text}"
+    )
+    try:
+        response = GENAI_CLIENT.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
+        output = getattr(response, "text", "") or ""
+        output = output.strip()
+        if not output:
+            logger.warning("Gemini translate returned empty text; using original.")
+        return output or text
+    except Exception as e:
+        logger.warning("Gemini translate failed (%s); using original.", e)
+        return text
 
 
 def _load_prompt(name: str) -> str | None:

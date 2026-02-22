@@ -4,11 +4,8 @@ SQLAlchemy==2.0.34
 pydantic==2.8.2
 python-dotenv==1.0.1
 google-genai
-
 # Auth dependencies
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
-
-# Test dependencies
 pytest==8.3.3

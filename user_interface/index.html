@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinic Co-pilot | AI-Powered Clinical Intake</title>
+  <script>
+    (function() {
+      const isFile = window.location.protocol === 'file:';
+      const isBackend = window.location.origin.includes('localhost:8000') || window.location.origin.includes('127.0.0.1:8000');
+      const useStatic = isFile || !isBackend;
+      const baseDir = useStatic ? window.location.pathname.replace(/[^/]+$/, '') : '';
+      window.APP_PATHS = {
+        isFile,
+        isBackend,
+        useStatic,
+        baseDir,
+        patient: useStatic ? baseDir + 'patient.html' : '/patient',
+        nurseLogin: useStatic ? baseDir + 'nurse_login.html' : '/provider/login',
+        doctorLogin: useStatic ? baseDir + 'doctor_login.html' : '/doctor/login',
+      };
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .hero-gradient {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+    }
+    .card-hover {
+      transition: all 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white" style="font-size: 22px;">ecg_heart</span>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-slate-900 leading-tight">Clinic Co-pilot</h1>
+            <p class="text-xs text-slate-500 -mt-0.5 hidden sm:block">AI-Powered Clinical Intake</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="#" id="header-doctor-link" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors px-3 py-2">
+            Doctor Login
+          </a>
+          <a href="#" id="header-nurse-link" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors px-3 py-2">
+            Staff Login
+          </a>
+          <a href="#" id="header-patient-link" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg transition-colors">
+            Patient Check-In
+            <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-gradient min-h-screen flex items-center pt-16">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24 w-full">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        
+        <!-- Left Content -->
+        <div class="text-white">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full mb-6">
+            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span class="text-sm font-medium text-white/90">HIPAA Compliant & Secure</span>
+          </div>
+          
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+            Streamline Your
+            <span class="block text-blue-200">Clinical Intake</span>
+          </h1>
+          
+          <p class="text-lg sm:text-xl text-blue-100 leading-relaxed mb-8 max-w-xl">
+            Skip the waiting room paperwork. Our AI-powered system collects patient history, 
+            generates clinical summaries, and flags urgent cases — before the doctor even walks in.
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#" id="hero-patient-link" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-brand-700 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-lg shadow-black/10">
+              <span class="material-symbols-outlined" style="font-size: 20px;">person</span>
+              Start Patient Check-In
+            </a>
+            <a href="#how-it-works" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
+              Learn How It Works
+              <span class="material-symbols-outlined" style="font-size: 18px;">expand_more</span>
+            </a>
+          </div>
+          
+          <!-- Trust Indicators -->
+          <div class="mt-12 pt-8 border-t border-white/10">
+            <div class="grid grid-cols-3 gap-6">
+              <div>
+                <p class="text-3xl font-bold text-white">50%</p>
+                <p class="text-sm text-blue-200">Faster Intake</p>
+              </div>
+              <div>
+                <p class="text-3xl font-bold text-white">AI</p>
+                <p class="text-sm text-blue-200">Triage Support</p>
+              </div>
+              <div>
+                <p class="text-3xl font-bold text-white">24/7</p>
+                <p class="text-sm text-blue-200">Availability</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right - Portal Cards -->
+        <div class="space-y-4">
+          
+          <!-- Patient Card -->
+          <div class="bg-white rounded-xl p-6 shadow-xl card-hover">
+            <div class="flex items-start gap-4">
+              <div class="w-14 h-14 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-brand-600" style="font-size: 28px;">person_add</span>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-xl font-bold text-slate-900 mb-1">Patient Portal</h3>
+                <p class="text-slate-500 text-sm mb-4">Complete your intake forms digitally. No login required.</p>
+                <a href="#" id="card-patient-link" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                  Begin Check-In
+                  <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Staff Cards Row -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            
+            <!-- Nurse Card -->
+            <a href="#" id="card-nurse-link" class="bg-white rounded-xl p-5 shadow-lg card-hover block group">
+              <div class="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center mb-4 group-hover:bg-emerald-200 transition-colors">
+                <span class="material-symbols-outlined text-emerald-600" style="font-size: 24px;">stethoscope</span>
+              </div>
+              <h4 class="text-lg font-bold text-slate-900 mb-1">Nurse / Provider</h4>
+              <p class="text-slate-500 text-sm mb-3">Record vitals and verify patient data</p>
+              <span class="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+                Login
+                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+              </span>
+            </a>
+            
+            <!-- Doctor Card -->
+            <a href="#" id="card-doctor-link" class="bg-white rounded-xl p-5 shadow-lg card-hover block group">
+              <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
+                <span class="material-symbols-outlined text-purple-600" style="font-size: 24px;">medical_services</span>
+              </div>
+              <h4 class="text-lg font-bold text-slate-900 mb-1">Physician</h4>
+              <p class="text-slate-500 text-sm mb-3">Review AI summaries and make decisions</p>
+              <span class="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+                Login
+                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-20 lg:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">How It Works</h2>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto">A seamless workflow that connects patients, nurses, and physicians</p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-8 lg:gap-12">
+        
+        <!-- Step 1 -->
+        <div class="relative">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">1</div>
+            <div class="hidden md:block flex-1 h-0.5 bg-slate-200"></div>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Patient Submits Intake</h3>
+          <p class="text-slate-500 leading-relaxed">Patients complete medical history, symptoms, and chief complaint from any device — no app download needed.</p>
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="relative">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">2</div>
+            <div class="hidden md:block flex-1 h-0.5 bg-slate-200"></div>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Nurse Verifies Vitals</h3>
+          <p class="text-slate-500 leading-relaxed">Clinical staff records vitals and confirms data. AI automatically generates urgency scores and clinical summaries.</p>
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="relative">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">3</div>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Doctor Reviews & Decides</h3>
+          <p class="text-slate-500 leading-relaxed">Physicians receive prioritized cases with AI-generated insights, red flags, and recommended next steps.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-20 lg:py-28 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">Built for Modern Clinics</h2>
+          <p class="text-lg text-slate-500 mb-8">Clinic Co-pilot leverages AI to reduce administrative burden while maintaining the human touch in healthcare.</p>
+          
+          <div class="space-y-6">
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-brand-600" style="font-size: 20px;">auto_awesome</span>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-900 mb-1">AI-Generated Clinical Summaries</h4>
+                <p class="text-slate-500 text-sm">Automatic triage scores, differential diagnoses, and red flag detection.</p>
+              </div>
+            </div>
+            
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-emerald-600" style="font-size: 20px;">translate</span>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-900 mb-1">Multi-Language Support</h4>
+                <p class="text-slate-500 text-sm">Patients can submit forms in their preferred language with automatic translation.</p>
+              </div>
+            </div>
+            
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-purple-600" style="font-size: 20px;">security</span>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-900 mb-1">HIPAA-Compliant Security</h4>
+                <p class="text-slate-500 text-sm">Enterprise-grade encryption and role-based access control.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-8 shadow-xl border border-slate-100">
+          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center">
+              <span class="material-symbols-outlined text-brand-600" style="font-size: 20px;">ecg_heart</span>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-900">AI Clinical Summary</p>
+              <p class="text-xs text-slate-500">Generated in real-time</p>
+            </div>
+          </div>
+          <div class="space-y-4 text-sm">
+            <div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+              <p class="font-semibold text-red-800 mb-1">⚠️ Red Flag Detected</p>
+              <p class="text-red-700">Chest pain with shortness of breath — consider cardiac workup.</p>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-lg">
+              <p class="font-medium text-slate-700 mb-1">Urgency Score: <span class="text-amber-600 font-bold">72/100</span></p>
+              <p class="text-slate-500">Elevated based on symptom severity and vital signs.</p>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-lg">
+              <p class="font-medium text-slate-700 mb-1">Differential Considerations</p>
+              <p class="text-slate-500">Acute coronary syndrome, pulmonary embolism, anxiety/panic disorder.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 lg:py-20 bg-slate-900">
+    <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to Streamline Your Clinic?</h2>
+      <p class="text-lg text-slate-400 mb-8">Start using Clinic Co-pilot today — no setup required.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#" id="cta-patient-link" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors">
+          <span class="material-symbols-outlined" style="font-size: 20px;">person</span>
+          Patient Check-In
+        </a>
+        <a href="#" id="cta-staff-link" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-colors border border-white/20">
+          <span class="material-symbols-outlined" style="font-size: 20px;">login</span>
+          Staff Login
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 bg-slate-950 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-400" style="font-size: 20px;">ecg_heart</span>
+          </div>
+          <span class="text-sm font-semibold text-slate-400">Clinic Co-pilot</span>
+        </div>
+        <div class="flex items-center gap-6 text-sm text-slate-500">
+          <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+          <a href="#" class="hover:text-white transition-colors">Contact</a>
+        </div>
+        <p class="text-xs text-slate-600">© 2026 Clinic Co-pilot. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Navigation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const paths = window.APP_PATHS;
+      
+      // Header links
+      document.getElementById('header-patient-link').href = paths.patient;
+      document.getElementById('header-nurse-link').href = paths.nurseLogin;
+      document.getElementById('header-doctor-link').href = paths.doctorLogin;
+      
+      // Hero links
+      document.getElementById('hero-patient-link').href = paths.patient;
+      
+      // Card links
+      document.getElementById('card-patient-link').href = paths.patient;
+      document.getElementById('card-nurse-link').href = paths.nurseLogin;
+      document.getElementById('card-doctor-link').href = paths.doctorLogin;
+      
+      // CTA links
+      document.getElementById('cta-patient-link').href = paths.patient;
+      document.getElementById('cta-staff-link').href = paths.nurseLogin;
+    });
+  </script>
+</body>
+</html>

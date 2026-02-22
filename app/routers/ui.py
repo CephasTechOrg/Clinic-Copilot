@@ -12,7 +12,7 @@ def _file_response(name: str) -> FileResponse:
 
 @router.get("/")
 def root():
-    return _file_response("patient.html")
+    return _file_response("index.html")
 
 
 @router.get("/patient")
@@ -27,6 +27,11 @@ def nurse_ui():
 
 @router.get("/nurse/login")
 def nurse_login_ui():
+    return _file_response("nurse_login.html")
+
+
+@router.get("/provider/login")
+def provider_login_ui():
     return _file_response("nurse_login.html")
 
 @router.get("/nurse/register")

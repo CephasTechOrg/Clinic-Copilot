@@ -77,6 +77,10 @@
       
       @keyframes spin { to { transform: rotate(360deg); } }
       .spinner { animation: spin 1s linear infinite; }
+
+      /* RTL support */
+      .rtl { direction: rtl; }
+      .rtl .form-input { text-align: right; }
     </style>
   </head>
   <body class="bg-gradient-to-b from-slate-50 to-slate-100 min-h-screen">
@@ -117,7 +121,7 @@
           <!-- Submit button (header) -->
           <button id="header-submit" type="submit" form="intake-form" class="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
             <span class="btn-text flex items-center gap-2">
-              <span class="hidden sm:inline">Submit</span>
+              <span class="hidden sm:inline" data-i18n="submit_header">Submit</span>
               <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
             </span>
             <span class="btn-spinner items-center gap-2">
@@ -137,10 +141,25 @@
     <div id="form-container">
       <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         
+        <!-- Language selector -->
+        <div class="flex justify-end mb-4 animate-fade-in-up">
+          <div class="flex items-center gap-2 px-3 py-2 bg-white/80 border border-slate-200 rounded-xl shadow-sm">
+            <span class="material-symbols-outlined text-slate-400 text-base">language</span>
+            <span class="text-xs font-semibold text-slate-600" data-i18n="label_language">Language</span>
+            <select id="language-select" name="preferred_language" class="text-sm bg-transparent text-slate-700 font-semibold focus:outline-none">
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="ar">العربية</option>
+              <option value="pt">Português</option>
+            </select>
+          </div>
+        </div>
+        
         <!-- Welcome message -->
         <div class="text-center mb-8 animate-fade-in-up">
-          <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Welcome to Your Visit</h2>
-          <p class="text-slate-500 max-w-md mx-auto">Please complete this form to help us understand your health concerns. All information is kept confidential.</p>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2" data-i18n="welcome_title">Welcome to Your Visit</h2>
+          <p class="text-slate-500 max-w-md mx-auto" data-i18n="welcome_subtitle">Please complete this form to help us understand your health concerns. All information is kept confidential.</p>
         </div>
 
         <!-- Error message -->
@@ -158,44 +177,44 @@
                 <span class="material-symbols-outlined text-white">person</span>
               </div>
               <div>
-                <h3 class="font-semibold text-slate-800 text-lg">Personal Information</h3>
-                <p class="text-sm text-slate-500">Your basic details</p>
+                <h3 class="font-semibold text-slate-800 text-lg" data-i18n="section_personal_title">Personal Information</h3>
+                <p class="text-sm text-slate-500" data-i18n="section_personal_sub">Your basic details</p>
               </div>
             </div>
             
             <div class="grid gap-4 sm:gap-5 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-slate-700 mb-2">
-                  Full Name <span class="text-red-400">*</span>
+                  <span data-i18n="label_full_name">Full Name</span> <span class="text-red-400">*</span>
                 </label>
-                <input name="full_name" type="text" required placeholder="Enter your full name" class="form-input" autocomplete="name" />
+                <input name="full_name" type="text" required placeholder="Enter your full name" data-i18n-placeholder="ph_full_name" class="form-input" autocomplete="name" />
               </div>
               
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">
-                  Age <span class="text-red-400">*</span>
+                  <span data-i18n="label_age">Age</span> <span class="text-red-400">*</span>
                 </label>
-                <input name="age" type="number" required min="0" max="130" placeholder="Years" class="form-input" inputmode="numeric" />
+                <input name="age" type="number" required min="0" max="130" placeholder="Years" data-i18n-placeholder="ph_age" class="form-input" inputmode="numeric" />
               </div>
               
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">
-                  Sex <span class="text-red-400">*</span>
+                  <span data-i18n="label_sex">Sex</span> <span class="text-red-400">*</span>
                 </label>
                 <select name="sex" required class="form-input">
-                  <option value="">Select...</option>
-                  <option value="Female">Female</option>
-                  <option value="Male">Male</option>
-                  <option value="Other">Other</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
+                  <option value="" data-i18n="opt_select">Select...</option>
+                  <option value="Female" data-i18n="opt_female">Female</option>
+                  <option value="Male" data-i18n="opt_male">Male</option>
+                  <option value="Other" data-i18n="opt_other">Other</option>
+                  <option value="Prefer not to say" data-i18n="opt_prefer_not">Prefer not to say</option>
                 </select>
               </div>
               
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-slate-700 mb-2">
-                  Address <span class="text-red-400">*</span>
+                  <span data-i18n="label_address">Address</span> <span class="text-red-400">*</span>
                 </label>
-                <input name="address" type="text" required placeholder="Street address, City" class="form-input" autocomplete="street-address" />
+                <input name="address" type="text" required placeholder="Street address, City" data-i18n-placeholder="ph_address" class="form-input" autocomplete="street-address" />
               </div>
             </div>
           </section>
@@ -207,47 +226,47 @@
                 <span class="material-symbols-outlined text-white">healing</span>
               </div>
               <div>
-                <h3 class="font-semibold text-slate-800 text-lg">Current Symptoms</h3>
-                <p class="text-sm text-slate-500">Tell us what brings you in today</p>
+                <h3 class="font-semibold text-slate-800 text-lg" data-i18n="section_symptoms_title">Current Symptoms</h3>
+                <p class="text-sm text-slate-500" data-i18n="section_symptoms_sub">Tell us what brings you in today</p>
               </div>
             </div>
             
             <div class="space-y-4 sm:space-y-5">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">
-                  Chief Complaint <span class="text-red-400">*</span>
+                  <span data-i18n="label_chief_complaint">Chief Complaint</span> <span class="text-red-400">*</span>
                 </label>
-                <input name="chief_complaint" type="text" required placeholder="Main reason for your visit (e.g., headache, chest pain)" class="form-input" />
+                <input name="chief_complaint" type="text" required placeholder="Main reason for your visit (e.g., headache, chest pain)" data-i18n-placeholder="ph_chief_complaint" class="form-input" />
               </div>
               
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">
-                  Describe Your Symptoms <span class="text-red-400">*</span>
+                  <span data-i18n="label_symptoms">Describe Your Symptoms</span> <span class="text-red-400">*</span>
                 </label>
-                <textarea name="symptoms" required rows="4" placeholder="Please describe what you're experiencing in detail. Include when it started, what makes it better or worse, and any other relevant information..." class="form-input resize-none"></textarea>
+                <textarea name="symptoms" required rows="4" placeholder="Please describe what you're experiencing in detail. Include when it started, what makes it better or worse, and any other relevant information..." data-i18n-placeholder="ph_symptoms" class="form-input resize-none"></textarea>
               </div>
               
               <div class="grid gap-4 sm:gap-5 sm:grid-cols-2">
                 <div>
                   <label class="block text-sm font-medium text-slate-700 mb-2">
-                    Duration <span class="text-red-400">*</span>
+                    <span data-i18n="label_duration">Duration</span> <span class="text-red-400">*</span>
                   </label>
-                  <input name="duration" type="text" required placeholder="e.g., 2 days, 1 week" class="form-input" />
+                  <input name="duration" type="text" required placeholder="e.g., 2 days, 1 week" data-i18n-placeholder="ph_duration" class="form-input" />
                 </div>
                 
                 <div>
                   <label class="block text-sm font-medium text-slate-700 mb-2">
                     <span class="flex items-center justify-between">
-                      <span>Pain/Severity <span class="text-red-400">*</span></span>
+                      <span><span data-i18n="label_severity">Pain/Severity</span> <span class="text-red-400">*</span></span>
                       <span id="severity-display" class="text-primary-600 font-bold text-base">5/10</span>
                     </span>
                   </label>
                   <div class="pt-2">
                     <input name="severity" id="severity" type="range" required min="1" max="10" value="5" class="w-full" />
                     <div class="flex justify-between text-xs text-slate-400 mt-2 px-1">
-                      <span>Mild</span>
-                      <span>Moderate</span>
-                      <span>Severe</span>
+                      <span data-i18n="severity_mild">Mild</span>
+                      <span data-i18n="severity_moderate">Moderate</span>
+                      <span data-i18n="severity_severe">Severe</span>
                     </div>
                   </div>
                 </div>
@@ -262,28 +281,28 @@
                 <span class="material-symbols-outlined text-white">history</span>
               </div>
               <div>
-                <h3 class="font-semibold text-slate-800 text-lg">Medical History</h3>
-                <p class="text-sm text-slate-500">Optional but helpful for your care</p>
+                <h3 class="font-semibold text-slate-800 text-lg" data-i18n="section_history_title">Medical History</h3>
+                <p class="text-sm text-slate-500" data-i18n="section_history_sub">Optional but helpful for your care</p>
               </div>
             </div>
             
             <div class="space-y-4 sm:space-y-5">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Pre-existing Conditions</label>
-                <textarea name="history" rows="2" placeholder="e.g., Diabetes, Hypertension, Asthma, Heart disease..." class="form-input resize-none"></textarea>
+                <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="label_history">Pre-existing Conditions</label>
+                <textarea name="history" rows="2" placeholder="e.g., Diabetes, Hypertension, Asthma, Heart disease..." data-i18n-placeholder="ph_history" class="form-input resize-none"></textarea>
               </div>
               
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Current Medications</label>
-                <textarea name="medications" rows="2" placeholder="List any medications, vitamins, or supplements you take regularly..." class="form-input resize-none"></textarea>
+                <label class="block text-sm font-medium text-slate-700 mb-2" data-i18n="label_medications">Current Medications</label>
+                <textarea name="medications" rows="2" placeholder="List any medications, vitamins, or supplements you take regularly..." data-i18n-placeholder="ph_medications" class="form-input resize-none"></textarea>
               </div>
               
               <div>
                 <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                  <span>Known Allergies</span>
-                  <span class="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded-full">Important</span>
+                  <span data-i18n="label_allergies">Known Allergies</span>
+                  <span class="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded-full" data-i18n="label_important">Important</span>
                 </label>
-                <textarea name="allergies" rows="2" placeholder="e.g., Penicillin, Aspirin, Latex, Peanuts..." class="form-input resize-none border-red-200 focus:border-red-400 focus:ring-red-100"></textarea>
+                <textarea name="allergies" rows="2" placeholder="e.g., Penicillin, Aspirin, Latex, Peanuts..." data-i18n-placeholder="ph_allergies" class="form-input resize-none border-red-200 focus:border-red-400 focus:ring-red-100"></textarea>
               </div>
             </div>
           </section>
@@ -293,13 +312,13 @@
             <!-- Privacy notice -->
             <div class="flex items-start gap-3 p-4 bg-primary-50 border border-primary-100 rounded-xl mb-6">
               <span class="material-symbols-outlined text-primary-500 mt-0.5">shield</span>
-              <p class="text-sm text-primary-700">Your information is encrypted and shared only with your healthcare team. We follow strict HIPAA privacy guidelines.</p>
+              <p class="text-sm text-primary-700" data-i18n="privacy_notice">Your information is encrypted and shared only with your healthcare team. We follow strict HIPAA privacy guidelines.</p>
             </div>
             
             <!-- Mobile submit button -->
             <button id="submit-intake" type="submit" class="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <span class="btn-text flex items-center gap-2">
-                <span>Submit to Healthcare Provider</span>
+                <span data-i18n="submit_button">Submit to Healthcare Provider</span>
                 <span class="material-symbols-outlined">arrow_forward</span>
               </span>
               <span class="btn-spinner items-center gap-2">
@@ -308,7 +327,7 @@
               </span>
             </button>
             
-            <p class="text-center text-xs text-slate-400 mt-4">Fields marked with <span class="text-red-400">*</span> are required</p>
+            <p class="text-center text-xs text-slate-400 mt-4"><span data-i18n="required_note">Fields marked with</span> <span class="text-red-400">*</span> <span data-i18n="required_note_suffix">are required</span></p>
           </div>
         </form>
       </main>
@@ -326,27 +345,27 @@
         </div>
         
         <!-- Success message -->
-        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-3 animate-fade-in-up" style="animation-delay: 0.2s">Successfully Submitted!</h2>
-        <p class="text-lg text-slate-600 mb-8 animate-fade-in-up" style="animation-delay: 0.3s">Your information has been sent to our nursing staff for review.</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-3 animate-fade-in-up" style="animation-delay: 0.2s" data-i18n="success_title">Successfully Submitted!</h2>
+        <p class="text-lg text-slate-600 mb-8 animate-fade-in-up" style="animation-delay: 0.3s" data-i18n="success_subtitle">Your information has been sent to our nursing staff for review.</p>
         
         <!-- Queue info card -->
         <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 mb-8 border border-slate-100 text-left animate-fade-in-up" style="animation-delay: 0.4s">
           <div class="flex items-center gap-3 mb-4">
             <span class="material-symbols-outlined text-primary-500 text-2xl">schedule</span>
-            <span class="text-lg font-semibold text-slate-700">What happens next?</span>
+            <span class="text-lg font-semibold text-slate-700" data-i18n="next_steps_title">What happens next?</span>
           </div>
           <ol class="space-y-4 text-sm text-slate-600">
             <li class="flex items-start gap-3">
               <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-              <span>A nurse will review your information and take your vitals</span>
+              <span data-i18n="next_step_1">A nurse will review your information and take your vitals</span>
             </li>
             <li class="flex items-start gap-3">
               <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-              <span>Our AI assistant will prepare a clinical summary</span>
+              <span data-i18n="next_step_2">Our AI assistant will prepare a clinical summary</span>
             </li>
             <li class="flex items-start gap-3">
               <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-              <span>A doctor will review your case and provide recommendations</span>
+              <span data-i18n="next_step_3">A doctor will review your case and provide recommendations</span>
             </li>
           </ol>
         </div>
@@ -355,9 +374,9 @@
         <div class="space-y-3 animate-fade-in-up" style="animation-delay: 0.5s">
           <button id="new-intake-btn" class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all">
             <span class="material-symbols-outlined">add</span>
-            <span>Submit Another Patient</span>
+            <span data-i18n="submit_another">Submit Another Patient</span>
           </button>
-          <p class="text-xs text-slate-400">For a different patient or family member</p>
+          <p class="text-xs text-slate-400" data-i18n="submit_another_sub">For a different patient or family member</p>
         </div>
       </div>
       
@@ -439,7 +458,7 @@
       });
     </script>
     
-    <script src="../static/js/patient.js?v=7"></script>
+    <script src="../static/js/patient.js?v=8"></script>
     
     <script>
       // Severity slider display

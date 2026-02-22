@@ -20,6 +20,7 @@ class IntakeCreate(BaseModel):
     history: str = Field(default="", max_length=2000)
     medications: str = Field(default="", max_length=2000)
     allergies: str = Field(default="", max_length=2000)
+    preferred_language: str = Field(default="en", pattern="^(en|es|fr|ar|pt)$")
 
 
 class VitalsCreate(BaseModel):

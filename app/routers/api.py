@@ -1,17 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from pydantic import BaseModel
+import logging
 import os
+from typing import Any
 from dotenv import load_dotenv
 
 from ..db import get_db
 from ..models import PatientIntake, VitalsEntry, ClinicalSummary, User
 from ..schemas import IntakeCreate, VitalsCreate, DecisionUpdate
 from datetime import datetime
-from ..services.ai import generate_clinical_summary
+from ..services.ai import generate_clinical_summary, translate_text, language_name
 from ..auth import require_nurse, require_doctor, require_staff
 
-load_dotenv()
+load_dotenv(override=True)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -84,6 +90,13 @@ def _intake_to_dict(intake: PatientIntake) -> dict:
         "history": intake.history,
         "medications": intake.medications,
         "allergies": intake.allergies,
+        "preferred_language": getattr(intake, "preferred_language", "en"),
+        "chief_complaint_original": getattr(intake, "chief_complaint_original", ""),
+        "symptoms_original": getattr(intake, "symptoms_original", ""),
+        "duration_original": getattr(intake, "duration_original", ""),
+        "history_original": getattr(intake, "history_original", ""),
+        "medications_original": getattr(intake, "medications_original", ""),
+        "allergies_original": getattr(intake, "allergies_original", ""),
         "workflow_status": getattr(intake, 'workflow_status', 'PENDING_NURSE'),
         "doctor_status": doctor_status,
         "doctor_status_updated_at": intake.doctor_status_updated_at.strftime("%Y-%m-%d %H:%M:%S") if intake.doctor_status_updated_at else None,
@@ -127,7 +140,26 @@ def get_intake(intake_id: int, db: Session = Depends(get_db), user: User = Depen
 
 @router.post("/intakes")
 def create_intake(payload: IntakeCreate, db: Session = Depends(get_db)):
-    intake = PatientIntake(**payload.model_dump())
+    intake_data = payload.model_dump()
+    preferred_language = (intake_data.get("preferred_language") or "en").lower()
+    intake_data["preferred_language"] = preferred_language
+
+    if preferred_language != "en":
+        intake_data["chief_complaint_original"] = intake_data.get("chief_complaint", "")
+        intake_data["symptoms_original"] = intake_data.get("symptoms", "")
+        intake_data["duration_original"] = intake_data.get("duration", "")
+        intake_data["history_original"] = intake_data.get("history", "")
+        intake_data["medications_original"] = intake_data.get("medications", "")
+        intake_data["allergies_original"] = intake_data.get("allergies", "")
+
+        intake_data["chief_complaint"] = translate_text(intake_data.get("chief_complaint", ""), "English")
+        intake_data["symptoms"] = translate_text(intake_data.get("symptoms", ""), "English")
+        intake_data["duration"] = translate_text(intake_data.get("duration", ""), "English")
+        intake_data["history"] = translate_text(intake_data.get("history", ""), "English")
+        intake_data["medications"] = translate_text(intake_data.get("medications", ""), "English")
+        intake_data["allergies"] = translate_text(intake_data.get("allergies", ""), "English")
+
+    intake = PatientIntake(**intake_data)
     intake.workflow_status = "PENDING_NURSE"
     intake.doctor_status = "PENDING"
     db.add(intake)
@@ -265,6 +297,40 @@ def update_decision(intake_id: int, payload: DecisionUpdate, db: Session = Depen
     else:
         message = "Decision recorded successfully"
     return {"status": "ok", "message": message}
+
+
+class TranslateRequest(BaseModel):
+    language: str
+    fields: dict[str, Any]
+
+
+def _translate_value(value: Any, target_language: str) -> Any:
+    if value is None:
+        return value
+    if isinstance(value, str):
+        return translate_text(value, language_name(target_language))
+    if isinstance(value, list):
+        return [_translate_value(item, target_language) for item in value]
+    if isinstance(value, dict):
+        return {k: _translate_value(v, target_language) for k, v in value.items()}
+    return value
+
+
+@router.post("/translate")
+def translate_payload(payload: TranslateRequest = Body(...), user: User = Depends(require_staff)):
+    target_language = (payload.language or "en").lower()
+    allowed = {"en", "es", "fr", "ar", "pt"}
+    if target_language not in allowed:
+        raise HTTPException(status_code=400, detail="Unsupported language")
+
+    if target_language == "en":
+        return {"language": "en", "fields": payload.fields}
+
+    translated: dict[str, Any] = {}
+    for key, value in (payload.fields or {}).items():
+        translated[key] = _translate_value(value, target_language)
+
+    return {"language": target_language, "fields": translated}
 
 
 @router.post("/seed-demo-data")

@@ -374,10 +374,20 @@
                   <p class="text-xs text-slate-400 mt-1" id="patient-timestamp">--</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <span id="priority-pill" class="px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wide bg-slate-100 text-slate-500">
                   Pending
                 </span>
+                <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-2 py-1">
+                  <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Language</span>
+                  <select id="doctor-language-select" class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="ar">Arabic</option>
+                    <option value="pt">Portuguese</option>
+                  </select>
+                </div>
               </div>
             </div>
             
@@ -387,6 +397,7 @@
               <p class="text-sm text-slate-700 leading-relaxed" id="chief-complaint">--</p>
             </div>
           </div>
+
           
           <!-- Two Column Grid -->
           <div class="grid gap-5 md:grid-cols-2">
@@ -673,6 +684,6 @@
       };
     </script>
     <script src="../static/js/auth.js"></script>
-    <script src="../static/js/doctor.js?v=13"></script>
+    <script src="../static/js/doctor.js?v=14"></script>
   </body>
 </html>

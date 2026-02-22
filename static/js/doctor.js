@@ -49,6 +49,7 @@
   const patientMeta = document.getElementById("patient-meta");
   const patientTimestamp = document.getElementById("patient-timestamp");
   const priorityPill = document.getElementById("priority-pill");
+  const doctorLanguageSelect = document.getElementById("doctor-language-select");
   const chiefComplaint = document.getElementById("chief-complaint");
   const vitalsSummary = document.getElementById("vitals-summary");
   const vitalsChart = document.getElementById("vitals-chart");
@@ -70,8 +71,11 @@
 
   let currentIntakeId = null;
   let currentDoctorStatus = "PENDING";
+  let currentIntakeData = null;
+  let currentViewLanguage = "en";
   let viewMode = "pending";
   let lastCounts = { pending: 0, admitted: 0, approved: 0, delayed: 0 };
+  let translationCache = {};
 
   const setPriority = (level) => {
     const norm = (level || "PENDING").toUpperCase();
@@ -254,6 +258,88 @@
   const getSortTime = (item) => {
     const date = parseTimestamp(item?.doctor_status_updated_at || item?.created_at);
     return date ? date.getTime() : 0;
+  };
+
+  const buildTranslationPayload = (data) => ({
+    chief_complaint: data?.chief_complaint || "",
+    symptoms: data?.symptoms || "",
+    duration: data?.duration || "",
+    severity: data?.severity || "",
+    history: data?.history || "None reported",
+    medications: data?.medications || "None reported",
+    allergies: data?.allergies || "None reported",
+    short_summary: data?.clinical_summary?.short_summary || "",
+    red_flags: data?.clinical_summary?.red_flags || [],
+    differential: data?.clinical_summary?.differential || [],
+    recommended_questions: data?.clinical_summary?.recommended_questions || [],
+    recommended_next_steps: data?.clinical_summary?.recommended_next_steps || [],
+  });
+
+  const applyTranslatedFields = (fields) => {
+    if (!fields) return;
+    if (chiefComplaint) {
+      chiefComplaint.textContent = fields.chief_complaint || "--";
+    }
+    if (aiSummary) {
+      aiSummary.textContent = fields.short_summary || "Select a case to view AI-generated clinical summary.";
+    }
+    renderRedFlags(fields.red_flags || []);
+    renderDifferential(fields.differential || []);
+    renderQuestions(fields.recommended_questions || []);
+    renderNextSteps(fields.recommended_next_steps || []);
+  };
+
+  const fetchTranslation = async (lang, payload) => {
+    const res = await fetch(API_BASE + "/api/translate", {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        language: lang,
+        fields: payload,
+      }),
+    });
+    if (res.status === 401) {
+      if (typeof AUTH !== 'undefined') AUTH.logout(LOGIN_URL);
+      return null;
+    }
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json().catch(() => ({}));
+    return data.fields || null;
+  };
+
+  const applyLanguage = async (lang) => {
+    if (!currentIntakeData) return;
+    currentViewLanguage = lang;
+
+    const baseFields = buildTranslationPayload(currentIntakeData);
+    applyTranslatedFields(baseFields);
+    if (lang === "en") {
+      return;
+    }
+
+    const cacheKey = String(currentIntakeId || "default");
+    if (!translationCache[cacheKey]) translationCache[cacheKey] = {};
+    if (translationCache[cacheKey][lang]) {
+      applyTranslatedFields(translationCache[cacheKey][lang]);
+      return;
+    }
+
+    if (window.showToast) {
+      window.showToast("Translating", "Updating clinical text...", false);
+    }
+
+    const translated = await fetchTranslation(lang, baseFields);
+    if (translated) {
+      translationCache[cacheKey][lang] = translated;
+      applyTranslatedFields(translated);
+    } else {
+      applyTranslatedFields(baseFields);
+      if (window.showToast) {
+        window.showToast("Translation Unavailable", "Showing English instead.", true);
+      }
+    }
   };
 
   const VITAL_RANGES = {
@@ -488,7 +574,9 @@
   };
 
   const updateDetails = (data) => {
+    currentIntakeData = data;
     currentIntakeId = data.id;
+    currentViewLanguage = (doctorLanguageSelect && doctorLanguageSelect.value) ? doctorLanguageSelect.value : "en";
     if (patientName) {
       // Format: "John Doe" (name only, age/sex shown separately)
       patientName.textContent = data.full_name || "Unknown Patient";
@@ -501,15 +589,10 @@
       const stamp = data.doctor_status_updated_at || data.created_at;
       patientTimestamp.textContent = `Last update: ${formatTimestamp(stamp)}`;
     }
-    if (chiefComplaint) chiefComplaint.textContent = data.chief_complaint || "--";
-    if (aiSummary) aiSummary.textContent = data.clinical_summary?.short_summary || "Select a case to view AI-generated clinical summary.";
 
     setPriority(data.clinical_summary?.priority_level);
     renderVitals(data.vitals);
-    renderRedFlags(data.clinical_summary?.red_flags || []);
-    renderDifferential(data.clinical_summary?.differential || []);
-    renderQuestions(data.clinical_summary?.recommended_questions || []);
-    renderNextSteps(data.clinical_summary?.recommended_next_steps || []);
+    applyLanguage(currentViewLanguage);
 
     if (doctorNote) {
       doctorNote.value = data.clinical_summary?.doctor_note || "";
@@ -670,6 +753,13 @@
   }
   if (queueToggleDelayed) {
     queueToggleDelayed.addEventListener("click", () => setViewMode("delayed"));
+  }
+
+  if (doctorLanguageSelect) {
+    doctorLanguageSelect.addEventListener("change", () => {
+      const lang = doctorLanguageSelect.value || "en";
+      applyLanguage(lang);
+    });
   }
 
   setViewMode(viewMode);
