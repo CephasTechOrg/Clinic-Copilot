@@ -33,7 +33,7 @@ class VitalsCreate(BaseModel):
 
 
 class DecisionUpdate(BaseModel):
-    decision: str = Field(pattern="^(ADMIT|NOT_ADMIT|PENDING)$")
+    decision: str = Field(pattern="^(ADMIT|ADMITTED|NOT_ADMIT|APPROVE|APPROVED|DELAY|DELAYED|RELEASE|PENDING)$")
     doctor_note: str = Field(default="", max_length=5000)
 
 

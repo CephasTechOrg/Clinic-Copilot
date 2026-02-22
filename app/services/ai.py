@@ -14,7 +14,7 @@ from typing import Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
 try:
-    import google.generativeai as genai
+    from google import genai
 except ModuleNotFoundError:
     genai = None
 
@@ -25,11 +25,15 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if GEMINI_API_KEY and genai:
-    genai.configure(api_key=GEMINI_API_KEY)
-
 # Use fast Gemini model (good balance for hackathon)
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-3-flash-preview")
+
+GENAI_CLIENT = None
+if GEMINI_API_KEY and genai:
+    try:
+        GENAI_CLIENT = genai.Client(api_key=GEMINI_API_KEY)
+    except Exception:
+        GENAI_CLIENT = None
 
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
@@ -59,17 +63,28 @@ def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
 
     try:
-        if not GEMINI_API_KEY or not genai:
-            raise Exception("No Gemini API key found")
-
-        model = genai.GenerativeModel(MODEL_NAME)
+        if not GEMINI_API_KEY or not genai or not GENAI_CLIENT:
+            raise Exception("Gemini client not configured")
 
         prompt = build_prompt(payload)
 
-        response = model.generate_content(prompt)
+        response = GENAI_CLIENT.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
 
-        # Extract raw text
-        text_output = response.text.strip()
+        text_output = getattr(response, "text", None)
+        if not text_output:
+            try:
+                candidate = response.candidates[0]
+                parts = candidate.content.parts
+                text_output = "".join(getattr(p, "text", "") for p in parts).strip()
+            except Exception:
+                text_output = ""
+
+        text_output = text_output.strip()
+        if not text_output:
+            raise ValueError("Gemini response was empty")
 
         # Gemini sometimes wraps JSON in ```json
         if "```" in text_output:

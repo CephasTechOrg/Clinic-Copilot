@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from ..db import get_db
 from ..models import PatientIntake, VitalsEntry, ClinicalSummary, User
 from ..schemas import IntakeCreate, VitalsCreate, DecisionUpdate
+from datetime import datetime
 from ..services.ai import generate_clinical_summary
 from ..auth import require_nurse, require_doctor, require_staff
 
@@ -52,8 +53,24 @@ def _summary_to_dict(summary: ClinicalSummary | None) -> dict:
         "created_at": summary.created_at.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
+def _normalize_doctor_status(value: str | None) -> str:
+    if not value:
+        return "PENDING"
+    norm = value.strip().upper()
+    if norm in {"ADMIT", "ADMITTED"}:
+        return "ADMITTED"
+    if norm in {"NOT_ADMIT", "APPROVE", "APPROVED", "RELEASE"}:
+        return "APPROVED"
+    if norm in {"DELAY", "DELAYED"}:
+        return "DELAYED"
+    if norm == "PENDING":
+        return "PENDING"
+    return "PENDING"
 
 def _intake_to_dict(intake: PatientIntake) -> dict:
+    doctor_status = _normalize_doctor_status(
+        getattr(intake, "doctor_status", None) or (intake.clinical_summary.decision if intake.clinical_summary else None)
+    )
     return {
         "id": intake.id,
         "full_name": intake.full_name,
@@ -68,6 +85,8 @@ def _intake_to_dict(intake: PatientIntake) -> dict:
         "medications": intake.medications,
         "allergies": intake.allergies,
         "workflow_status": getattr(intake, 'workflow_status', 'PENDING_NURSE'),
+        "doctor_status": doctor_status,
+        "doctor_status_updated_at": intake.doctor_status_updated_at.strftime("%Y-%m-%d %H:%M:%S") if intake.doctor_status_updated_at else None,
         "created_at": intake.created_at.strftime("%Y-%m-%d %H:%M"),
         "has_vitals": intake.vitals is not None,
         "has_summary": intake.clinical_summary is not None,
@@ -110,6 +129,7 @@ def get_intake(intake_id: int, db: Session = Depends(get_db), user: User = Depen
 def create_intake(payload: IntakeCreate, db: Session = Depends(get_db)):
     intake = PatientIntake(**payload.model_dump())
     intake.workflow_status = "PENDING_NURSE"
+    intake.doctor_status = "PENDING"
     db.add(intake)
     db.commit()
     db.refresh(intake)
@@ -175,6 +195,8 @@ def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(g
     
     # Update workflow status to PENDING_DOCTOR
     intake.workflow_status = "PENDING_DOCTOR"
+    intake.doctor_status = "PENDING"
+    intake.doctor_status_updated_at = datetime.utcnow()
     db.add(intake)
     db.commit()
 
@@ -196,22 +218,52 @@ def update_decision(intake_id: int, payload: DecisionUpdate, db: Session = Depen
     
     if not intake.clinical_summary:
         raise HTTPException(status_code=400, detail="Clinical summary not generated yet")
-    
-    # EC-12: Prevent changing decision on completed cases (optional: allow with flag)
-    if intake.workflow_status == "COMPLETED" and intake.clinical_summary.decision != "PENDING":
-        raise HTTPException(status_code=409, detail="Decision already finalized. Contact admin to modify.")
 
     summary: ClinicalSummary = intake.clinical_summary
-    summary.decision = payload.decision
+    new_status = _normalize_doctor_status(payload.decision)
+    current_status = _normalize_doctor_status(getattr(intake, "doctor_status", None) or summary.decision)
+
+    # Allowable transitions:
+    # PENDING -> ADMITTED / APPROVED / DELAYED
+    # DELAYED -> ADMITTED / APPROVED
+    # ADMITTED -> APPROVED (release)
+    allowed = {
+        ("PENDING", "ADMITTED"),
+        ("PENDING", "APPROVED"),
+        ("PENDING", "DELAYED"),
+        ("DELAYED", "ADMITTED"),
+        ("DELAYED", "APPROVED"),
+        ("ADMITTED", "APPROVED"),
+        ("PENDING", "PENDING"),
+        ("DELAYED", "DELAYED"),
+        ("ADMITTED", "ADMITTED"),
+        ("APPROVED", "APPROVED"),
+    }
+    if (current_status, new_status) not in allowed:
+        raise HTTPException(status_code=409, detail="Invalid status transition")
+
+    summary.decision = new_status
     summary.doctor_note = payload.doctor_note
     db.add(summary)
     
     # Update workflow status to COMPLETED
-    intake.workflow_status = "COMPLETED"
+    if new_status == "PENDING":
+        intake.workflow_status = "PENDING_DOCTOR"
+    else:
+        intake.workflow_status = "COMPLETED"
+    intake.doctor_status = new_status
+    intake.doctor_status_updated_at = datetime.utcnow()
     db.add(intake)
     db.commit()
 
-    message = "Patient admitted successfully" if payload.decision == "ADMIT" else "Decision recorded successfully"
+    if new_status == "ADMITTED":
+        message = "Patient admitted successfully"
+    elif new_status == "APPROVED":
+        message = "Patient approved for discharge"
+    elif new_status == "DELAYED":
+        message = "Decision delayed for further observation"
+    else:
+        message = "Decision recorded successfully"
     return {"status": "ok", "message": message}
 
 

@@ -53,6 +53,9 @@ class PatientIntake(Base):
 
     # Workflow status: PENDING_NURSE -> PENDING_DOCTOR -> COMPLETED
     workflow_status: Mapped[str] = mapped_column(String(30), default="PENDING_NURSE")
+    # Doctor workflow status: PENDING -> ADMITTED / APPROVED / DELAYED
+    doctor_status: Mapped[str] = mapped_column(String(30), default="PENDING")
+    doctor_status_updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

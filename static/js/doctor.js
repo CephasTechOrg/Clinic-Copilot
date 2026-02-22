@@ -31,19 +31,27 @@
     return headers;
   };
   
-  const queue = document.getElementById("doctor-queue");
-  const queueEmpty = document.getElementById("doctor-queue-empty");
-  const queueHistory = document.getElementById("doctor-queue-history");
-  const queueHistoryEmpty = document.getElementById("doctor-queue-history-empty");
+  const queuePending = document.getElementById("doctor-queue-pending");
+  const queuePendingEmpty = document.getElementById("doctor-queue-pending-empty");
+  const queueAdmitted = document.getElementById("doctor-queue-admitted");
+  const queueAdmittedEmpty = document.getElementById("doctor-queue-admitted-empty");
+  const queueApproved = document.getElementById("doctor-queue-approved");
+  const queueApprovedEmpty = document.getElementById("doctor-queue-approved-empty");
+  const queueDelayed = document.getElementById("doctor-queue-delayed");
+  const queueDelayedEmpty = document.getElementById("doctor-queue-delayed-empty");
   const queueSubtitle = document.getElementById("doctor-queue-subtitle");
   const queueTogglePending = document.getElementById("doctor-queue-toggle-pending");
-  const queueToggleHistory = document.getElementById("doctor-queue-toggle-history");
+  const queueToggleAdmitted = document.getElementById("doctor-queue-toggle-admitted");
+  const queueToggleApproved = document.getElementById("doctor-queue-toggle-approved");
+  const queueToggleDelayed = document.getElementById("doctor-queue-toggle-delayed");
 
   const patientName = document.getElementById("patient-name");
   const patientMeta = document.getElementById("patient-meta");
+  const patientTimestamp = document.getElementById("patient-timestamp");
   const priorityPill = document.getElementById("priority-pill");
   const chiefComplaint = document.getElementById("chief-complaint");
   const vitalsSummary = document.getElementById("vitals-summary");
+  const vitalsChart = document.getElementById("vitals-chart");
   const aiSummary = document.getElementById("ai-summary");
   const redFlags = document.getElementById("red-flags");
   const differentialList = document.getElementById("differential-list");
@@ -52,13 +60,18 @@
   const doctorNote = document.getElementById("doctor-note");
   const urgencyScore = document.getElementById("urgency-score");
   const urgencyLabel = document.getElementById("urgency-label");
+  const severityRing = document.getElementById("severity-ring");
 
   const decisionAdmit = document.getElementById("decision-admit");
-  const decisionDeny = document.getElementById("decision-deny");
+  const decisionApprove = document.getElementById("decision-approve");
+  const decisionDelay = document.getElementById("decision-delay");
+  const decisionRelease = document.getElementById("decision-release");
   const decisionError = document.getElementById("decision-error");
 
   let currentIntakeId = null;
+  let currentDoctorStatus = "PENDING";
   let viewMode = "pending";
+  let lastCounts = { pending: 0, admitted: 0, approved: 0, delayed: 0 };
 
   const setPriority = (level) => {
     const norm = (level || "PENDING").toUpperCase();
@@ -99,11 +112,131 @@
     if (urgencyScore) urgencyScore.textContent = score + "%";
     if (urgencyLabel) {
       urgencyLabel.textContent = label;
-      urgencyLabel.className = "text-sm font-semibold uppercase tracking-wide " + labelColor;
+      urgencyLabel.className = "severity-label " + labelColor;
     }
     
     // Animate gauge needle
     if (window.setRiskGauge) window.setRiskGauge(score);
+    if (window.setSeverityDial) window.setSeverityDial(score, norm);
+  };
+
+  const normalizeDoctorStatus = (value) => {
+    if (!value) return "PENDING";
+    const norm = String(value).trim().toUpperCase();
+    if (["ADMIT", "ADMITTED"].includes(norm)) return "ADMITTED";
+    if (["NOT_ADMIT", "APPROVE", "APPROVED", "RELEASE"].includes(norm)) return "APPROVED";
+    if (["DELAY", "DELAYED"].includes(norm)) return "DELAYED";
+    if (norm === "PENDING") return "PENDING";
+    return "PENDING";
+  };
+
+  const getDoctorStatus = (item) => {
+    return normalizeDoctorStatus(item?.doctor_status || item?.clinical_summary?.decision);
+  };
+
+  const updateQueueSubtitle = (mode) => {
+    if (!queueSubtitle) return;
+    const count = lastCounts[mode] || 0;
+    if (mode === "pending") {
+      queueSubtitle.textContent = `${count} case${count !== 1 ? 's' : ''} ready for review`;
+    } else if (mode === "admitted") {
+      queueSubtitle.textContent = `${count} admitted patient${count !== 1 ? 's' : ''}`;
+    } else if (mode === "approved") {
+      queueSubtitle.textContent = `${count} approved discharge${count !== 1 ? 's' : ''}`;
+    } else if (mode === "delayed") {
+      queueSubtitle.textContent = `${count} delayed case${count !== 1 ? 's' : ''}`;
+    } else {
+      queueSubtitle.textContent = "Case queue";
+    }
+  };
+
+  const setTabActive = (btn, isActive) => {
+    if (!btn) return;
+    if (isActive) {
+      btn.className = "flex-1 px-2 py-2 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm transition-all";
+    } else {
+      btn.className = "flex-1 px-2 py-2 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all";
+    }
+  };
+
+  const formatTimestamp = (value) => {
+    if (!value) return "--";
+    try {
+      const iso = String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z";
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return "--";
+      return date.toLocaleString();
+    } catch (e) {
+      return "--";
+    }
+  };
+
+  const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+  const VITAL_RANGES = {
+    heart_rate: { label: "HR", min: 40, max: 160, normalMin: 60, normalMax: 100, unit: "bpm" },
+    respiratory_rate: { label: "RR", min: 8, max: 40, normalMin: 12, normalMax: 20, unit: "/min" },
+    temperature_c: { label: "Temp", min: 34, max: 41, normalMin: 36.1, normalMax: 37.5, unit: "C" },
+    spo2: { label: "SpO2", min: 80, max: 100, normalMin: 95, normalMax: 100, unit: "%" },
+    systolic_bp: { label: "SBP", min: 70, max: 180, normalMin: 100, normalMax: 120, unit: "mmHg" },
+  };
+
+  const formatVitalValue = (key, value) => {
+    if (value === null || value === undefined || Number.isNaN(value)) return "--";
+    if (key === "temperature_c") return value.toFixed(1);
+    return Math.round(value).toString();
+  };
+
+  const renderVitalsChart = (vitals) => {
+    if (!vitalsChart) return;
+    if (!vitals) {
+      vitalsChart.innerHTML = `<p class="text-xs text-slate-400">No vitals available.</p>`;
+      return;
+    }
+
+    const rows = Object.entries(VITAL_RANGES).map(([key, range]) => {
+      const raw = Number(vitals[key]);
+      if (!Number.isFinite(raw)) {
+        return `
+          <div class="vital-row">
+            <span class="vital-label">${range.label}</span>
+            <div class="vital-track"></div>
+            <span class="vital-value">--</span>
+          </div>
+        `;
+      }
+
+      const value = clamp(raw, range.min, range.max);
+      const percent = ((value - range.min) / (range.max - range.min)) * 100;
+      const normalStart = ((range.normalMin - range.min) / (range.max - range.min)) * 100;
+      const normalWidth = ((range.normalMax - range.normalMin) / (range.max - range.min)) * 100;
+      let state = "normal";
+      if (raw < range.normalMin) state = "low";
+      if (raw > range.normalMax) state = "high";
+
+      return `
+        <div class="vital-row">
+          <span class="vital-label">${range.label}</span>
+          <div class="vital-track">
+            <div class="vital-normal" style="left: ${normalStart}%; width: ${normalWidth}%;"></div>
+            <div class="vital-indicator ${state}" style="left: ${percent}%;"></div>
+          </div>
+          <span class="vital-value ${state}">${formatVitalValue(key, raw)}${range.unit}</span>
+        </div>
+      `;
+    });
+
+    vitalsChart.innerHTML = rows.join("");
+  };
+
+  window.setSeverityDial = function(score, level) {
+    if (!severityRing) return;
+    const clamped = Math.max(0, Math.min(100, score || 0));
+    let color = "#94a3b8";
+    if (level === "HIGH") color = "#ef4444";
+    else if (level === "MED") color = "#f59e0b";
+    else if (level === "LOW") color = "#22c55e";
+    severityRing.style.background = `conic-gradient(${color} ${clamped}%, #e2e8f0 ${clamped}% 100%)`;
   };
 
   const renderRedFlags = (items) => {
@@ -165,12 +298,13 @@
     if (!vitalsSummary) return;
     if (!vitals) {
       vitalsSummary.innerHTML = `
-        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">HR</p><p class="text-lg font-bold text-slate-800">--</p></div>
-        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">RR</p><p class="text-lg font-bold text-slate-800">--</p></div>
-        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">Temp</p><p class="text-lg font-bold text-slate-800">--</p></div>
-        <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">SpO2</p><p class="text-lg font-bold text-slate-800">--</p></div>
-        <div class="text-center p-3 bg-slate-50 rounded-xl col-span-2"><p class="text-xs text-slate-500 font-medium">Blood Pressure</p><p class="text-lg font-bold text-slate-800">--/--</p></div>
+        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">HR</p><p class="text-base font-bold text-slate-800">--</p></div>
+        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">RR</p><p class="text-base font-bold text-slate-800">--</p></div>
+        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Temp</p><p class="text-base font-bold text-slate-800">--</p></div>
+        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">SpO2</p><p class="text-base font-bold text-slate-800">--</p></div>
+        <div class="text-center p-2.5 bg-slate-50 rounded-lg col-span-2"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Blood Pressure</p><p class="text-base font-bold text-slate-800">--/--</p></div>
       `;
+      renderVitalsChart(null);
       return;
     }
     
@@ -182,15 +316,16 @@
     const bpClass = (vitals.systolic_bp > 140 || vitals.systolic_bp < 90) ? "text-amber-600" : "text-slate-800";
     
     vitalsSummary.innerHTML = `
-      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">HR</p><p class="text-lg font-bold ${hrClass}">${vitals.heart_rate}</p></div>
-      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">RR</p><p class="text-lg font-bold ${rrClass}">${vitals.respiratory_rate}</p></div>
-      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">Temp</p><p class="text-lg font-bold ${tempClass}">${vitals.temperature_c}&deg;C</p></div>
-      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">SpO2</p><p class="text-lg font-bold ${spo2Class}">${vitals.spo2}%</p></div>
-      <div class="text-center p-3 bg-slate-50 rounded-xl col-span-2"><p class="text-xs text-slate-500 font-medium">Blood Pressure</p><p class="text-lg font-bold ${bpClass}">${vitals.systolic_bp}/${vitals.diastolic_bp}</p></div>
+      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">HR</p><p class="text-base font-bold ${hrClass}">${vitals.heart_rate}</p></div>
+      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">RR</p><p class="text-base font-bold ${rrClass}">${vitals.respiratory_rate}</p></div>
+      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Temp</p><p class="text-base font-bold ${tempClass}">${vitals.temperature_c}&deg;C</p></div>
+      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">SpO2</p><p class="text-base font-bold ${spo2Class}">${vitals.spo2}%</p></div>
+      <div class="text-center p-2.5 bg-slate-50 rounded-lg col-span-2"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Blood Pressure</p><p class="text-base font-bold ${bpClass}">${vitals.systolic_bp}/${vitals.diastolic_bp}</p></div>
     `;
+    renderVitalsChart(vitals);
   };
 
-  const renderQueue = (items, targetEl, emptyEl, showDecision = false) => {
+  const renderQueue = (items, targetEl, emptyEl, showStatus = false) => {
     if (!targetEl) return;
     if (!items || items.length === 0) {
       targetEl.innerHTML = '';
@@ -203,29 +338,26 @@
       .map((i) => {
         const priority = i.clinical_summary?.priority_level || i.priority_level || "PENDING";
         const isActive = currentIntakeId === i.id;
-        let priorityBadgeClass = "bg-slate-100 text-slate-600";
+        let priorityBadgeClass = "bg-slate-100 text-slate-500";
         if (priority === "HIGH") priorityBadgeClass = "bg-red-100 text-red-600";
         else if (priority === "MED") priorityBadgeClass = "bg-amber-100 text-amber-600";
         else if (priority === "LOW") priorityBadgeClass = "bg-emerald-100 text-emerald-600";
 
-        const decision = i.clinical_summary?.decision || "PENDING";
-        const decisionLabel = showDecision ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase">${decision}</span>` : "";
+        const status = getDoctorStatus(i);
+        const statusLabel = showStatus ? `<span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">${status}</span>` : "";
         
         return `
-          <div class="case-card bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 ${isActive ? 'active' : 'border-white/50'} shadow-lg shadow-slate-200/30 cursor-pointer" data-id="${i.id}">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <h3 class="font-bold text-slate-800">${i.full_name}</h3>
-              <div class="flex items-center gap-1">
-                ${decisionLabel}
-                <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass} uppercase">${priority}</span>
+          <div class="case-card ${isActive ? 'active' : ''}" data-id="${i.id}">
+            <div class="flex items-start justify-between gap-2 mb-1.5">
+              <h3 class="font-semibold text-slate-800 text-sm">${i.full_name}</h3>
+              <div class="flex items-center gap-1.5">
+                ${statusLabel}
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${priorityBadgeClass} uppercase">${priority}</span>
               </div>
             </div>
-            <p class="text-sm text-slate-600 mb-1">${i.age} yrs - ${i.sex || 'N/A'}</p>
-            <p class="text-xs text-slate-500 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
-            <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
-              <span class="material-symbols-outlined text-xs">schedule</span>
-              ${i.created_at || 'Recent'}
-            </div>
+            <p class="text-xs text-slate-500 mb-1">${i.age} yrs • ${i.sex || 'N/A'}</p>
+            <p class="text-[11px] text-slate-400">${formatTimestamp(i.doctor_status_updated_at || i.created_at)}</p>
+            <p class="text-xs text-slate-600 line-clamp-1">${i.chief_complaint}</p>
           </div>
         `;
       })
@@ -234,19 +366,21 @@
 
   const setViewMode = (mode) => {
     viewMode = mode;
-    if (queueTogglePending && queueToggleHistory) {
-      if (mode === "pending") {
-        queueTogglePending.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-primary-500 text-white";
-        queueToggleHistory.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600";
-      } else {
-        queueTogglePending.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600";
-        queueToggleHistory.className = "px-3 py-1.5 text-xs font-semibold rounded-full bg-primary-500 text-white";
-      }
-    }
-    if (queue) queue.classList.toggle('hidden', mode !== "pending");
-    if (queueEmpty) queueEmpty.classList.toggle('hidden', mode !== "pending");
-    if (queueHistory) queueHistory.classList.toggle('hidden', mode !== "history");
-    if (queueHistoryEmpty) queueHistoryEmpty.classList.toggle('hidden', mode !== "history");
+    setTabActive(queueTogglePending, mode === "pending");
+    setTabActive(queueToggleAdmitted, mode === "admitted");
+    setTabActive(queueToggleApproved, mode === "approved");
+    setTabActive(queueToggleDelayed, mode === "delayed");
+
+    if (queuePending) queuePending.classList.toggle('hidden', mode !== "pending");
+    if (queuePendingEmpty) queuePendingEmpty.classList.toggle('hidden', mode !== "pending");
+    if (queueAdmitted) queueAdmitted.classList.toggle('hidden', mode !== "admitted");
+    if (queueAdmittedEmpty) queueAdmittedEmpty.classList.toggle('hidden', mode !== "admitted");
+    if (queueApproved) queueApproved.classList.toggle('hidden', mode !== "approved");
+    if (queueApprovedEmpty) queueApprovedEmpty.classList.toggle('hidden', mode !== "approved");
+    if (queueDelayed) queueDelayed.classList.toggle('hidden', mode !== "delayed");
+    if (queueDelayedEmpty) queueDelayedEmpty.classList.toggle('hidden', mode !== "delayed");
+
+    updateQueueSubtitle(mode);
   };
 
   const updateDetails = (data) => {
@@ -255,6 +389,10 @@
       patientName.textContent = `${data.full_name}, ${data.age}${data.sex ? data.sex[0] : ''}`;
     }
     if (patientMeta) patientMeta.textContent = `Patient ID: #${data.id}`;
+    if (patientTimestamp) {
+      const stamp = data.doctor_status_updated_at || data.created_at;
+      patientTimestamp.textContent = `Last update: ${formatTimestamp(stamp)}`;
+    }
     if (chiefComplaint) chiefComplaint.textContent = data.chief_complaint || "--";
     if (aiSummary) aiSummary.textContent = data.clinical_summary?.short_summary || "Select a case to view AI-generated clinical summary.";
 
@@ -267,6 +405,19 @@
 
     if (doctorNote) {
       doctorNote.value = data.clinical_summary?.doctor_note || "";
+    }
+
+    currentDoctorStatus = getDoctorStatus(data);
+    if (decisionRelease && decisionApprove) {
+      if (currentDoctorStatus === "ADMITTED") {
+        decisionRelease.classList.remove("hidden");
+        decisionRelease.classList.add("flex");
+        decisionApprove.classList.add("hidden");
+      } else {
+        decisionRelease.classList.add("hidden");
+        decisionRelease.classList.remove("flex");
+        decisionApprove.classList.remove("hidden");
+      }
     }
   };
 
@@ -297,47 +448,49 @@
     }
     const data = await res.json();
     const items = Array.isArray(data) ? data : data.items || [];
-    const ready = items.filter((i) => {
-      if (i.workflow_status) {
-        return i.workflow_status === "PENDING_DOCTOR";
-      }
-      const decision = i.clinical_summary?.decision || "PENDING";
-      return i.has_summary && decision === "PENDING";
-    });
 
     const pending = items.filter((i) => i.workflow_status === "PENDING_DOCTOR");
-    const completed = items.filter((i) => i.workflow_status === "COMPLETED");
+    const admitted = items.filter((i) => getDoctorStatus(i) === "ADMITTED");
+    const approved = items.filter((i) => getDoctorStatus(i) === "APPROVED");
+    const delayed = items.filter((i) => getDoctorStatus(i) === "DELAYED");
 
-    renderQueue(pending, queue, queueEmpty, false);
-    renderQueue(completed, queueHistory, queueHistoryEmpty, true);
-    if (queueSubtitle) queueSubtitle.textContent = `${pending.length} case${pending.length !== 1 ? 's' : ''} ready for review`;
+    lastCounts = {
+      pending: pending.length,
+      admitted: admitted.length,
+      approved: approved.length,
+      delayed: delayed.length,
+    };
+
+    renderQueue(pending, queuePending, queuePendingEmpty, false);
+    renderQueue(admitted, queueAdmitted, queueAdmittedEmpty, true);
+    renderQueue(approved, queueApproved, queueApprovedEmpty, true);
+    renderQueue(delayed, queueDelayed, queueDelayedEmpty, true);
+    updateQueueSubtitle(viewMode);
 
     const params = new URLSearchParams(window.location.search);
     const intakeId = params.get("intake_id");
-    if (intakeId && pending.find((i) => String(i.id) === String(intakeId)) && !currentIntakeId) {
+    const currentList = { pending, admitted, approved, delayed }[viewMode] || pending;
+    if (intakeId && currentList.find((i) => String(i.id) === String(intakeId)) && !currentIntakeId) {
       await loadCase(intakeId);
-    } else if (pending.length > 0 && !currentIntakeId) {
-      await loadCase(pending[0].id);
+    } else if (currentList.length > 0 && !currentIntakeId) {
+      await loadCase(currentList[0].id);
     }
   };
 
-  if (queue) {
-    queue.addEventListener("click", (e) => {
+  const attachQueueClick = (element) => {
+    if (!element) return;
+    element.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-id]");
       if (!btn) return;
       const id = btn.getAttribute("data-id");
       if (id) loadCase(id).catch(console.error);
     });
-  }
+  };
 
-  if (queueHistory) {
-    queueHistory.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-id]");
-      if (!btn) return;
-      const id = btn.getAttribute("data-id");
-      if (id) loadCase(id).catch(console.error);
-    });
-  }
+  attachQueueClick(queuePending);
+  attachQueueClick(queueAdmitted);
+  attachQueueClick(queueApproved);
+  attachQueueClick(queueDelayed);
 
   const submitDecision = async (decision) => {
     if (!currentIntakeId) {
@@ -368,11 +521,12 @@
         const msg = await res.text();
         throw new Error(msg || "Decision failed");
       }
+      const status = normalizeDoctorStatus(decision);
       // Show success modal instead of alert
       if (window.showSuccessModal) {
-        window.showSuccessModal(decision === "ADMIT");
+        window.showSuccessModal(status);
       } else {
-        alert(`Decision saved: ${decision === "ADMIT" ? "Patient Admitted" : "Not Admitted"}`);
+        alert(`Decision saved: ${status}`);
         window.location.reload();
       }
     } catch (err) {
@@ -388,13 +542,21 @@
   };
 
   if (decisionAdmit) decisionAdmit.addEventListener("click", () => submitDecision("ADMIT"));
-  if (decisionDeny) decisionDeny.addEventListener("click", () => submitDecision("NOT_ADMIT"));
+  if (decisionApprove) decisionApprove.addEventListener("click", () => submitDecision("APPROVE"));
+  if (decisionDelay) decisionDelay.addEventListener("click", () => submitDecision("DELAY"));
+  if (decisionRelease) decisionRelease.addEventListener("click", () => submitDecision("RELEASE"));
 
   if (queueTogglePending) {
     queueTogglePending.addEventListener("click", () => setViewMode("pending"));
   }
-  if (queueToggleHistory) {
-    queueToggleHistory.addEventListener("click", () => setViewMode("history"));
+  if (queueToggleAdmitted) {
+    queueToggleAdmitted.addEventListener("click", () => setViewMode("admitted"));
+  }
+  if (queueToggleApproved) {
+    queueToggleApproved.addEventListener("click", () => setViewMode("approved"));
+  }
+  if (queueToggleDelayed) {
+    queueToggleDelayed.addEventListener("click", () => setViewMode("delayed"));
   }
 
   setViewMode(viewMode);

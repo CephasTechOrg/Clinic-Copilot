@@ -21,7 +21,7 @@
         };
       })();
     </script>
-    <!-- Early auth check - redirect immediately if not logged in -->
+    <!-- Early auth check -->
     <script>
       (function() {
         const token = sessionStorage.getItem('clinic_copilot_token');
@@ -41,361 +41,544 @@
         }
       })();
     </script>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1&display=swap" rel="stylesheet" />
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
-              accent: { 500: '#8b5cf6', 600: '#7c3aed' },
+              primary: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' },
+              accent: { 50: '#faf5ff', 100: '#f3e8ff', 500: '#8b5cf6', 600: '#7c3aed' },
+              success: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a' },
+              danger: { 50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626' },
             },
             fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-out',
-              'slide-up': 'slideUp 0.4s ease-out',
-              'pulse-slow': 'pulse 2s infinite',
-            },
-            keyframes: {
-              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            }
           }
         }
       }
     </script>
     <style>
-      body { font-family: 'Inter', sans-serif; }
-      .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-      .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-      .gradient-red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-      .gradient-emerald { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-      textarea { 
-        border-radius: 12px; 
-        border: 1.5px solid #e2e8f0; 
-        padding: 14px 16px;
-        transition: all 0.2s ease;
+      body { 
+        font-family: 'Inter', sans-serif; 
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
-      textarea:focus {
-        border-color: #3b82f6;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
-      .priority-high { 
-        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
-        border-color: #fca5a5; 
-      }
-      .priority-med { 
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); 
-        border-color: #fcd34d; 
-      }
-      .priority-low { 
-        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
-        border-color: #86efac; 
-      }
-      .case-card { transition: all 0.2s ease; cursor: pointer; }
-      .case-card:hover { transform: translateX(4px); }
-      .case-card.active { border-left: 4px solid #3b82f6; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
       
-      /* Risk Gauge */
-      .gauge-container { position: relative; width: 140px; height: 70px; overflow: hidden; }
-      .gauge-bg { 
-        width: 140px; 
-        height: 140px; 
-        border-radius: 50%; 
-        background: conic-gradient(from 180deg, #22c55e 0deg, #eab308 90deg, #ef4444 180deg, transparent 180deg);
-        position: absolute;
-        top: 0;
-      }
-      .gauge-mask {
-        width: 100px;
-        height: 100px;
+      /* Glass effects */
+      .glass { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      
+      /* Cards */
+      .card {
         background: white;
-        border-radius: 50%;
-        position: absolute;
-        top: 20px;
-        left: 20px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
       }
-      .gauge-needle {
-        width: 4px;
-        height: 50px;
-        background: #1e293b;
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform-origin: bottom center;
-        transform: translateX(-50%) rotate(0deg);
-        border-radius: 2px;
-        transition: transform 0.8s ease-out;
+      
+      /* Case cards in queue */
+      .case-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
       }
-      .gauge-center {
+      .case-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      }
+      .case-card.active {
+        border-color: #0ea5e9;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      }
+      
+      /* Form inputs */
+      .form-textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        resize: none;
+      }
+      .form-textarea:focus {
+        outline: none;
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      }
+      
+      /* Risk gauge - simplified */
+      .risk-bar {
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
+        position: relative;
+      }
+      .risk-indicator {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
         width: 16px;
         height: 16px;
-        background: #1e293b;
+        background: white;
+        border: 3px solid #1e293b;
         border-radius: 50%;
-        position: absolute;
-        bottom: -8px;
-        left: 50%;
-        transform: translateX(-50%);
+        transition: left 0.6s ease-out;
       }
+
+      /* Severity dial */
+      .severity-ring {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: conic-gradient(#94a3b8 0% 0%, #e2e8f0 0% 100%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 0 1px #e2e8f0;
+      }
+      .severity-ring::before {
+        content: '';
+        position: absolute;
+        inset: 10px;
+        background: white;
+        border-radius: 50%;
+        border: 1px solid #e2e8f0;
+      }
+      .severity-center {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+      .severity-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+
+      /* Mini vitals chart */
+      .vital-row {
+        display: grid;
+        grid-template-columns: 44px 1fr 64px;
+        gap: 12px;
+        align-items: center;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+      }
+      .vital-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .vital-track {
+        position: relative;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .vital-normal {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        background: #c7f9d4;
+        opacity: 0.9;
+      }
+      .vital-indicator {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #0f172a;
+      }
+      .vital-indicator.low { background: #f59e0b; }
+      .vital-indicator.high { background: #ef4444; }
+      .vital-indicator.normal { background: #22c55e; }
+      .vital-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        text-align: right;
+      }
+      .vital-value.low { color: #b45309; }
+      .vital-value.high { color: #dc2626; }
+      .vital-value.normal { color: #15803d; }
+      
+      /* Scrollbar */
+      .custom-scroll::-webkit-scrollbar { width: 6px; }
+      .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+      .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+      .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      
+      /* Animations */
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+      .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
+      .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
+      
+      /* Toast hidden by default */
+      .toast-hidden { transform: translateX(120%); opacity: 0; pointer-events: none; }
+      .toast-visible { transform: translateX(0); opacity: 1; pointer-events: auto; }
     </style>
   </head>
-  <body class="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/20 text-slate-900 min-h-screen">
-    <!-- Decorative Background -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-40 -right-40 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"></div>
-    </div>
-
+  <body class="bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/20 min-h-screen">
+    
     <!-- Header -->
-    <header class="sticky top-0 z-50 glass border-b border-white/30">
-      <div class="max-w-7xl mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center shadow-md">
-              <span class="material-symbols-outlined text-white text-lg">stethoscope</span>
-            </div>
-            <h1 class="text-base font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">Clinic Co-Pilot</h1>
-          </div>
+    <header class="sticky top-0 z-50 glass border-b border-slate-200/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center justify-between h-14">
+          <!-- Logo -->
           <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-slate-400">Step 3/3</span>
-              <div class="flex gap-0.5">
-                <div class="w-6 h-1 rounded-full bg-primary-500"></div>
-                <div class="w-6 h-1 rounded-full bg-primary-500"></div>
-                <div class="w-6 h-1 rounded-full bg-primary-500"></div>
-              </div>
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-lg shadow-accent-500/20">
+              <span class="material-symbols-outlined text-white" style="font-size: 20px;">stethoscope</span>
             </div>
-            <div class="hidden md:flex items-center gap-1.5 px-2 py-1 bg-primary-100 rounded-full">
-              <span class="material-symbols-outlined text-primary-600 text-sm">auto_awesome</span>
-              <span class="text-xs font-semibold text-primary-700">AI Ready</span>
+            <div class="hidden sm:block">
+              <h1 class="text-base font-bold text-slate-800">Clinic Co-Pilot</h1>
+              <p class="text-[11px] text-slate-500 -mt-0.5">Doctor Dashboard</p>
             </div>
-            <!-- User Info & Logout -->
-            <div class="flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
-              <div class="flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-indigo-600 text-lg">person</span>
-                <span id="user-name" class="text-xs font-medium text-slate-600"></span>
-              </div>
-              <button onclick="AUTH.logout(window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login')" class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                <span class="material-symbols-outlined text-sm">logout</span>
-                <span class="hidden sm:inline">Logout</span>
-              </button>
+          </div>
+          
+          <!-- Center - Workflow -->
+          <div class="hidden md:flex items-center gap-2">
+            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-semibold text-emerald-700">Final Review</span>
             </div>
+            <span class="text-xs text-slate-400">Step 3 of 3</span>
+          </div>
+          
+          <!-- Right - User -->
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full">
+              <span class="material-symbols-outlined text-slate-600" style="font-size: 18px;">person</span>
+              <span id="user-name" class="text-sm font-medium text-slate-700 max-w-[100px] truncate"></span>
+            </div>
+            <button onclick="AUTH.logout(window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
+              <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
+            </button>
           </div>
         </div>
       </div>
     </header>
 
-    <main class="relative max-w-7xl mx-auto px-4 py-6 pb-32">
-      <div class="grid gap-6 lg:grid-cols-[340px_1fr]">
-        <!-- Cases Queue Panel -->
-        <section class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-bold text-slate-800">Ready for Review</h2>
-              <p class="text-sm text-slate-500" id="doctor-queue-subtitle">Loading cases...</p>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-5 pb-28">
+      <div class="flex flex-col lg:flex-row gap-5">
+        
+        <!-- Left Panel - Case Queue -->
+        <aside class="lg:w-80 xl:w-96 flex-shrink-0">
+          <div class="lg:sticky lg:top-20">
+            <!-- Queue Header -->
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="text-lg font-bold text-slate-800">Case Queue</h2>
+                <p class="text-sm text-slate-500" id="doctor-queue-subtitle">Loading...</p>
+              </div>
+              <button onclick="location.reload()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Refresh">
+                <span class="material-symbols-outlined text-slate-400" style="font-size: 20px;">refresh</span>
+              </button>
             </div>
-            <button onclick="location.reload()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Refresh">
-              <span class="material-symbols-outlined text-slate-500">refresh</span>
-            </button>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button id="doctor-queue-toggle-pending" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-primary-500 text-white">Pending</button>
-            <button id="doctor-queue-toggle-history" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">History</button>
-          </div>
-
-          <div class="space-y-3" id="doctor-queue">
-            <!-- Case cards will be inserted here -->
-          </div>
-
-          <div class="hidden text-center py-8" id="doctor-queue-empty">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-              <span class="material-symbols-outlined text-slate-400 text-3xl">check_circle</span>
+            
+            <!-- Toggle Tabs -->
+            <div class="flex gap-2 mb-4 p-1 bg-slate-100 rounded-lg">
+              <button id="doctor-queue-toggle-pending" class="flex-1 px-2 py-2 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm transition-all">
+                Pending
+              </button>
+              <button id="doctor-queue-toggle-admitted" class="flex-1 px-2 py-2 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                Admitted
+              </button>
+              <button id="doctor-queue-toggle-approved" class="flex-1 px-2 py-2 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                Approved
+              </button>
+              <button id="doctor-queue-toggle-delayed" class="flex-1 px-2 py-2 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                Delayed
+              </button>
             </div>
-            <p class="text-slate-500 font-medium">All caught up!</p>
-            <p class="text-sm text-slate-400">No pending cases to review</p>
-          </div>
-
-          <div class="hidden space-y-3" id="doctor-queue-history">
-            <!-- Completed cases will be inserted here -->
-          </div>
-
-          <div class="hidden text-center py-8" id="doctor-queue-history-empty">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-              <span class="material-symbols-outlined text-slate-400 text-3xl">history</span>
+            
+            <!-- Pending Queue -->
+            <div class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto custom-scroll pr-1" id="doctor-queue-pending">
+              <!-- Cards inserted by JS -->
             </div>
-            <p class="text-slate-500 font-medium">No history yet</p>
-            <p class="text-sm text-slate-400">Completed cases will appear here</p>
-          </div>
-        </section>
+            
+            <!-- Empty State - Pending -->
+            <div class="hidden text-center py-10" id="doctor-queue-pending-empty">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-emerald-500" style="font-size: 28px;">check_circle</span>
+              </div>
+              <p class="font-semibold text-slate-700">All caught up!</p>
+              <p class="text-sm text-slate-500 mt-1">No pending cases</p>
+            </div>
+            
+            <!-- Admitted Queue -->
+            <div class="hidden space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto custom-scroll pr-1" id="doctor-queue-admitted">
+              <!-- Admitted cards inserted by JS -->
+            </div>
+            
+            <!-- Empty State - Admitted -->
+            <div class="hidden text-center py-10" id="doctor-queue-admitted-empty">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-emerald-500" style="font-size: 28px;">local_hospital</span>
+              </div>
+              <p class="font-semibold text-slate-700">No admitted patients</p>
+              <p class="text-sm text-slate-500 mt-1">Admitted cases appear here</p>
+            </div>
 
-        <!-- Case Review Panel -->
-        <section class="space-y-5">
-          <!-- Patient Info Card -->
-          <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div class="flex items-start gap-4">
-                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center flex-shrink-0">
-                  <span class="material-symbols-outlined text-primary-600 text-3xl">person</span>
+            <!-- Approved Queue -->
+            <div class="hidden space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto custom-scroll pr-1" id="doctor-queue-approved">
+              <!-- Approved cards inserted by JS -->
+            </div>
+            
+            <!-- Empty State - Approved -->
+            <div class="hidden text-center py-10" id="doctor-queue-approved-empty">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-slate-400" style="font-size: 28px;">task_alt</span>
+              </div>
+              <p class="font-semibold text-slate-700">No approved discharges</p>
+              <p class="text-sm text-slate-500 mt-1">Approved cases appear here</p>
+            </div>
+
+            <!-- Delayed Queue -->
+            <div class="hidden space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto custom-scroll pr-1" id="doctor-queue-delayed">
+              <!-- Delayed cards inserted by JS -->
+            </div>
+            
+            <!-- Empty State - Delayed -->
+            <div class="hidden text-center py-10" id="doctor-queue-delayed-empty">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-amber-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-amber-500" style="font-size: 28px;">schedule</span>
+              </div>
+              <p class="font-semibold text-slate-700">No delayed cases</p>
+              <p class="text-sm text-slate-500 mt-1">Delayed cases appear here</p>
+            </div>
+          </div>
+        </aside>
+        
+        <!-- Right Panel - Case Details -->
+        <section class="flex-1 min-w-0 space-y-5">
+          
+          <!-- Patient Header Card -->
+          <div class="card p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-primary-600" style="font-size: 28px;">person</span>
                 </div>
                 <div>
                   <h2 class="text-xl font-bold text-slate-800" id="patient-name">Select a case</h2>
-                  <p class="text-sm text-slate-500" id="patient-meta">Patient ID: --</p>
-                  <div class="flex items-center gap-2 mt-2">
-                    <span class="material-symbols-outlined text-amber-500 text-lg">report</span>
-                    <p class="text-sm font-medium text-slate-700" id="chief-complaint">--</p>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                    <p id="patient-meta">Patient ID: --</p>
+                    <span class="text-slate-300">•</span>
+                    <p id="patient-timestamp">Last update: --</p>
                   </div>
                 </div>
               </div>
               <div class="flex items-center gap-3">
-                <span id="priority-pill" class="px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide bg-slate-100 text-slate-600 border border-slate-200">
-                  Priority
+                <span id="priority-pill" class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-500 border border-slate-200">
+                  Pending
                 </span>
               </div>
             </div>
+            
+            <!-- Chief Complaint -->
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <div class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-amber-500 flex-shrink-0" style="font-size: 20px;">emergency</span>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Chief Complaint</p>
+                  <p class="text-sm font-medium text-slate-800" id="chief-complaint">--</p>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <!-- AI Analysis Grid -->
+          
+          <!-- Two Column Grid -->
           <div class="grid gap-5 md:grid-cols-2">
+            
             <!-- Risk Assessment -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
+            <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-amber-500">speed</span>
+                <span class="material-symbols-outlined text-amber-500" style="font-size: 20px;">speed</span>
                 <h3 class="font-semibold text-slate-800">Risk Assessment</h3>
               </div>
               
-              <div class="flex flex-col items-center">
-                <div class="gauge-container">
-                  <div class="gauge-bg"></div>
-                  <div class="gauge-mask"></div>
-                  <div class="gauge-needle" id="risk-needle"></div>
-                  <div class="gauge-center"></div>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div class="severity-ring" id="severity-ring">
+                  <div class="severity-center">
+                    <p class="text-2xl font-bold text-slate-800" id="urgency-score">--%</p>
+                    <p class="severity-label" id="urgency-label">Severity</p>
+                  </div>
                 </div>
-                <div class="mt-4 text-center">
-                  <p class="text-3xl font-bold" id="urgency-score">--%</p>
-                  <p class="text-sm font-semibold uppercase tracking-wide" id="urgency-label">Risk Level</p>
+                <div class="flex-1">
+                  <p class="text-sm text-slate-600 font-medium">Severity Snapshot</p>
+                  <p class="text-xs text-slate-500 mt-1">A quick visual of current clinical risk based on vitals.</p>
+                  <div class="flex items-center gap-3 mt-3 text-[11px] text-slate-500 font-semibold">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Low</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Moderate</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span>High</span>
+                  </div>
                 </div>
+              </div>
+              
+              <div class="risk-bar">
+                <div class="risk-indicator" id="risk-needle" style="left: 50%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-400 mt-2 px-1">
+                <span>Low</span>
+                <span>Moderate</span>
+                <span>Critical</span>
               </div>
             </div>
-
-            <!-- AI Summary -->
-            <div class="bg-gradient-to-br from-primary-50 to-accent-50 rounded-2xl border border-primary-100 p-6">
+            
+            <!-- Vital Signs -->
+            <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-primary-500">auto_awesome</span>
-                <h3 class="font-semibold text-primary-800">AI Clinical Summary</h3>
+                <span class="material-symbols-outlined text-teal-500" style="font-size: 20px;">monitor_heart</span>
+                <h3 class="font-semibold text-slate-800">Vital Signs</h3>
               </div>
-              <p class="text-sm text-primary-700 leading-relaxed" id="ai-summary">
-                Select a case to view AI-generated clinical summary.
+              
+              <div class="grid grid-cols-3 gap-2" id="vitals-summary">
+                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">HR</p>
+                  <p class="text-base font-bold text-slate-800">--</p>
+                </div>
+                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">RR</p>
+                  <p class="text-base font-bold text-slate-800">--</p>
+                </div>
+                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">Temp</p>
+                  <p class="text-base font-bold text-slate-800">--</p>
+                </div>
+                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">SpO2</p>
+                  <p class="text-base font-bold text-slate-800">--</p>
+                </div>
+                <div class="text-center p-2.5 bg-slate-50 rounded-lg col-span-2">
+                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">Blood Pressure</p>
+                  <p class="text-base font-bold text-slate-800">--/--</p>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-4 border-t border-slate-100">
+                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">Vitals Snapshot</p>
+                <div class="space-y-3" id="vitals-chart"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- AI Clinical Summary -->
+          <div class="card overflow-hidden">
+            <div class="bg-gradient-to-r from-accent-500 to-primary-500 px-5 py-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-white" style="font-size: 20px;">auto_awesome</span>
+              <h3 class="font-semibold text-white">AI Clinical Summary</h3>
+            </div>
+            <div class="p-5">
+              <p class="text-sm text-slate-700 leading-relaxed" id="ai-summary">Select a case to view AI-generated clinical summary.</p>
+            </div>
+          </div>
+          
+          <!-- Red Flags -->
+          <div class="card overflow-hidden border-red-200">
+            <div class="bg-gradient-to-r from-red-500 to-rose-500 px-5 py-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-white" style="font-size: 20px;">warning</span>
+              <h3 class="font-semibold text-white">Clinical Red Flags</h3>
+            </div>
+            <div class="p-5" id="red-flags">
+              <p class="text-sm text-emerald-600 flex items-center gap-2">
+                <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
+                No red flags detected
               </p>
             </div>
           </div>
-
-          <!-- Red Flags -->
-          <div class="bg-red-50/80 backdrop-blur-sm rounded-2xl border border-red-200 overflow-hidden">
-            <div class="bg-gradient-to-r from-red-500 to-rose-500 px-6 py-3 flex items-center gap-2">
-              <span class="material-symbols-outlined text-white">warning</span>
-              <h3 class="font-semibold text-white">Clinical Red Flags</h3>
-            </div>
-            <div class="p-6" id="red-flags">
-              <p class="text-sm text-red-600">No red flags detected</p>
-            </div>
-          </div>
-
-          <!-- Vitals & Clinical Data Grid -->
+          
+          <!-- Two Column - Differential & Questions -->
           <div class="grid gap-5 md:grid-cols-2">
-            <!-- Vitals Summary -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
-              <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-teal-500">vital_signs</span>
-                <h3 class="font-semibold text-slate-800">Vital Signs</h3>
-              </div>
-              <div class="grid grid-cols-2 gap-3" id="vitals-summary">
-                <div class="text-center p-3 bg-slate-50 rounded-xl">
-                  <p class="text-xs text-slate-500 font-medium">HR</p>
-                  <p class="text-lg font-bold text-slate-800">--</p>
-                </div>
-                <div class="text-center p-3 bg-slate-50 rounded-xl">
-                  <p class="text-xs text-slate-500 font-medium">RR</p>
-                  <p class="text-lg font-bold text-slate-800">--</p>
-                </div>
-                <div class="text-center p-3 bg-slate-50 rounded-xl">
-                  <p class="text-xs text-slate-500 font-medium">Temp</p>
-                  <p class="text-lg font-bold text-slate-800">--</p>
-                </div>
-                <div class="text-center p-3 bg-slate-50 rounded-xl">
-                  <p class="text-xs text-slate-500 font-medium">SpO2</p>
-                  <p class="text-lg font-bold text-slate-800">--</p>
-                </div>
-                <div class="text-center p-3 bg-slate-50 rounded-xl col-span-2">
-                  <p class="text-xs text-slate-500 font-medium">Blood Pressure</p>
-                  <p class="text-lg font-bold text-slate-800">--/--</p>
-                </div>
-              </div>
-            </div>
-
+            
             <!-- Differential Considerations -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
+            <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-indigo-500">psychology</span>
-                <h3 class="font-semibold text-slate-800">Differential Considerations</h3>
+                <span class="material-symbols-outlined text-indigo-500" style="font-size: 20px;">psychology</span>
+                <h3 class="font-semibold text-slate-800">Differential Dx</h3>
               </div>
               <ul class="space-y-2" id="differential-list">
-                <li class="text-sm text-slate-500">--</li>
+                <li class="text-sm text-slate-400">--</li>
+              </ul>
+            </div>
+            
+            <!-- Recommended Questions -->
+            <div class="card p-5">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="material-symbols-outlined text-sky-500" style="font-size: 20px;">help</span>
+                <h3 class="font-semibold text-slate-800">Recommended Questions</h3>
+              </div>
+              <ul class="space-y-2" id="recommended-questions">
+                <li class="text-sm text-slate-400">--</li>
               </ul>
             </div>
           </div>
-
-          <!-- Recommended Questions -->
-          <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="material-symbols-outlined text-sky-500">help</span>
-              <h3 class="font-semibold text-slate-800">Recommended Questions</h3>
+          
+          <!-- AI Recommended Next Steps -->
+          <div class="card overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-white" style="font-size: 20px;">checklist</span>
+              <h3 class="font-semibold text-white">Recommended Next Steps</h3>
             </div>
-            <ul class="space-y-2" id="recommended-questions">
-              <li class="text-sm text-slate-500">--</li>
-            </ul>
-          </div>
-
-          <!-- Recommended Next Steps -->
-          <div class="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl p-6 text-white shadow-xl shadow-primary-500/25">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="material-symbols-outlined">checklist</span>
-              <h3 class="font-semibold">AI Recommended Next Steps</h3>
+            <div class="p-5">
+              <ul class="space-y-2" id="next-steps">
+                <li class="flex items-start gap-2 text-sm text-slate-500">
+                  <span class="material-symbols-outlined text-slate-400" style="font-size: 16px; margin-top: 2px;">arrow_forward</span>
+                  Select a case to view recommendations
+                </li>
+              </ul>
             </div>
-            <ul class="space-y-3" id="next-steps">
-              <li class="flex items-start gap-2 text-sm opacity-90">
-                <span class="material-symbols-outlined text-sm mt-0.5">arrow_forward</span>
-                Select a case to view recommendations
-              </li>
-            </ul>
           </div>
-
-          <!-- Doctor Notes -->
-          <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl shadow-slate-200/30 p-6">
+          
+          <!-- Physician Notes -->
+          <div class="card p-5">
             <div class="flex items-center gap-2 mb-4">
-              <span class="material-symbols-outlined text-slate-500">edit_note</span>
+              <span class="material-symbols-outlined text-slate-500" style="font-size: 20px;">edit_note</span>
               <h3 class="font-semibold text-slate-800">Physician Notes</h3>
             </div>
-            <textarea id="doctor-note" rows="4" placeholder="Add your clinical notes, observations, and reasoning here..." class="w-full bg-white/80 resize-none"></textarea>
+            <textarea id="doctor-note" rows="3" placeholder="Add your clinical notes, observations, and reasoning..." class="form-textarea"></textarea>
           </div>
+          
         </section>
       </div>
     </main>
 
     <!-- Fixed Bottom Action Bar -->
-    <div class="fixed bottom-0 left-0 right-0 glass border-t border-white/30 p-3 z-50">
-      <div class="max-w-2xl mx-auto">
-        <div class="text-center text-sm text-red-500 font-medium hidden mb-2" id="decision-error"></div>
-        <div class="flex gap-3">
-          <button id="decision-deny" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-xl">close</span>
-            <span>Not Admitted</span>
+    <div class="fixed bottom-0 left-0 right-0 glass border-t border-slate-200/50 p-3 z-40">
+      <div class="max-w-xl mx-auto">
+        <p class="text-center text-sm text-red-500 font-medium hidden mb-2" id="decision-error"></p>
+        <div class="flex flex-wrap gap-2">
+          <button id="decision-delay" class="flex-1 min-w-[120px] py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined" style="font-size: 20px;">schedule</span>
+            <span>Delay</span>
           </button>
-          <button id="decision-admit" class="flex-1 py-3 px-4 gradient-emerald text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-xl">check</span>
+          <button id="decision-approve" class="flex-1 min-w-[150px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined" style="font-size: 20px;">task_alt</span>
+            <span>Approve / Discharge</span>
+          </button>
+          <button id="decision-release" class="hidden flex-1 min-w-[140px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all items-center justify-center gap-2">
+            <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
+            <span>Release</span>
+          </button>
+          <button id="decision-admit" class="flex-1 min-w-[120px] py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold rounded-lg shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined" style="font-size: 20px;">check</span>
             <span>Admit Patient</span>
           </button>
         </div>
@@ -403,34 +586,34 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed top-4 right-4 transform translate-x-[120%] transition-transform duration-300 z-[100]">
-      <div class="bg-white rounded-xl shadow-2xl border border-slate-100 p-4 flex items-center gap-3 min-w-[320px]">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" id="toast-icon-wrapper">
+    <div id="toast" class="fixed top-16 right-4 transition-all duration-300 z-[100] toast-hidden">
+      <div class="bg-white rounded-xl shadow-2xl border border-slate-100 p-4 flex items-center gap-3 min-w-[280px]">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" id="toast-icon-wrapper">
           <span class="material-symbols-outlined" id="toast-icon">check_circle</span>
         </div>
-        <div>
-          <p class="font-semibold text-slate-800" id="toast-title">Success</p>
-          <p class="text-sm text-slate-500" id="toast-message">Operation completed</p>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-slate-800 text-sm" id="toast-title"></p>
+          <p class="text-xs text-slate-500 truncate" id="toast-message"></p>
         </div>
       </div>
     </div>
 
     <!-- Success Modal -->
-    <div id="success-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] hidden flex items-center justify-center">
-      <div class="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-sm mx-4 animate-slide-up">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" id="modal-icon-wrapper">
-          <span class="material-symbols-outlined text-white text-4xl" id="modal-icon">check</span>
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-sm w-full animate-fade-in-up">
+        <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center" id="modal-icon-wrapper">
+          <span class="material-symbols-outlined text-white" style="font-size: 32px;" id="modal-icon">check</span>
         </div>
         <h3 class="font-bold text-xl text-slate-800 mb-2" id="modal-title">Decision Saved</h3>
-        <p class="text-slate-500 mb-6" id="modal-message">The patient record has been updated.</p>
-        <button onclick="closeModal()" class="w-full py-3 gradient-bg text-white font-semibold rounded-xl">
+        <p class="text-slate-500 text-sm mb-6" id="modal-message">The patient record has been updated.</p>
+        <button onclick="closeModal()" class="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl transition-all">
           Continue
         </button>
       </div>
     </div>
 
     <script>
-      // Toast function (must be defined before doctor.js loads)
+      // Toast function
       window.showToast = function(title, message, isError = false) {
         const toast = document.getElementById('toast');
         const toastTitle = document.getElementById('toast-title');
@@ -443,41 +626,51 @@
         
         if (isError) {
           toastIcon.textContent = 'error';
-          toastIconWrapper.className = 'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
+          toastIconWrapper.className = 'w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0';
           toastIcon.className = 'material-symbols-outlined text-red-600';
         } else {
           toastIcon.textContent = 'check_circle';
-          toastIconWrapper.className = 'w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0';
+          toastIconWrapper.className = 'w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0';
           toastIcon.className = 'material-symbols-outlined text-emerald-600';
         }
         
-        toast.classList.remove('translate-x-[120%]');
-        toast.classList.add('translate-x-0');
+        toast.classList.remove('toast-hidden');
+        toast.classList.add('toast-visible');
         
         setTimeout(() => {
-          toast.classList.remove('translate-x-0');
-          toast.classList.add('translate-x-[120%]');
+          toast.classList.remove('toast-visible');
+          toast.classList.add('toast-hidden');
         }, 4000);
       };
 
-      // Success Modal function
-      window.showSuccessModal = function(isAdmit) {
+      // Success Modal
+      window.showSuccessModal = function(status) {
         const modal = document.getElementById('success-modal');
         const iconWrapper = document.getElementById('modal-icon-wrapper');
         const icon = document.getElementById('modal-icon');
         const title = document.getElementById('modal-title');
         const message = document.getElementById('modal-message');
         
-        if (isAdmit) {
-          iconWrapper.className = 'w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center gradient-emerald';
+        if (status === 'ADMITTED') {
+          iconWrapper.className = 'w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600';
           icon.textContent = 'check';
-          title.textContent = 'Patient Admitted Successfully';
-          message.textContent = 'The patient has been admitted and the care team has been notified.';
+          title.textContent = 'Patient Admitted';
+          message.textContent = 'The patient has been admitted and care team notified.';
+        } else if (status === 'APPROVED') {
+          iconWrapper.className = 'w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-slate-200';
+          icon.textContent = 'task_alt';
+          title.textContent = 'Patient Approved';
+          message.textContent = 'Patient cleared for discharge. Decision has been saved.';
+        } else if (status === 'DELAYED') {
+          iconWrapper.className = 'w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-amber-100';
+          icon.textContent = 'schedule';
+          title.textContent = 'Decision Delayed';
+          message.textContent = 'Patient status set to delayed for further observation.';
         } else {
-          iconWrapper.className = 'w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center bg-slate-200';
+          iconWrapper.className = 'w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-slate-200';
           icon.textContent = 'check';
           title.textContent = 'Decision Recorded';
-          message.textContent = 'Patient not admitted. The decision has been saved.';
+          message.textContent = 'The patient record has been updated.';
         }
         
         modal.classList.remove('hidden');
@@ -491,15 +684,15 @@
         location.reload();
       };
 
-      // Risk gauge animation
+      // Risk gauge - simplified bar version
       window.setRiskGauge = function(percentage) {
-        const needle = document.getElementById('risk-needle');
-        // Convert percentage (0-100) to degrees (-90 to 90)
-        const degrees = (percentage / 100) * 180 - 90;
-        needle.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
+        const indicator = document.getElementById('risk-needle');
+        if (indicator) {
+          indicator.style.left = percentage + '%';
+        }
       };
     </script>
     <script src="../static/js/auth.js"></script>
-    <script src="../static/js/doctor.js?v=6"></script>
+    <script src="../static/js/doctor.js?v=12"></script>
   </body>
 </html>
