@@ -56,10 +56,15 @@ def language_name(code_or_name: str) -> str:
     return LANGUAGE_NAMES.get(code, code_or_name)
 
 
+def is_gemini_ready() -> bool:
+    return bool(GEMINI_API_KEY and genai and GENAI_CLIENT)
+
+
 def translate_text(text: str, target_language: str) -> str:
     if not text or not str(text).strip():
         return text
-    if not GEMINI_API_KEY or not genai or not GENAI_CLIENT:
+    if not is_gemini_ready():
+        logger.warning("Gemini not configured; translation skipped.")
         return text
     language = language_name(target_language)
     prompt = (
@@ -80,6 +85,34 @@ def translate_text(text: str, target_language: str) -> str:
     except Exception as e:
         logger.warning("Gemini translate failed (%s); using original.", e)
         return text
+
+
+def translate_text_with_status(text: str, target_language: str) -> tuple[str, bool]:
+    if not text or not str(text).strip():
+        return text, False
+    if not is_gemini_ready():
+        logger.warning("Gemini not configured; translation skipped.")
+        return text, False
+    language = language_name(target_language)
+    prompt = (
+        f"Translate the following text to {language}. "
+        "Return only the translated text with no extra commentary.\n\n"
+        f"Text:\n{text}"
+    )
+    try:
+        response = GENAI_CLIENT.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
+        output = getattr(response, "text", "") or ""
+        output = output.strip()
+        if not output:
+            logger.warning("Gemini translate returned empty text; using original.")
+            return text, False
+        return output, True
+    except Exception as e:
+        logger.warning("Gemini translate failed (%s); using original.", e)
+        return text, False
 
 
 def _load_prompt(name: str) -> str | None:

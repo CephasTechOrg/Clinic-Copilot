@@ -12,7 +12,13 @@ from ..db import get_db
 from ..models import PatientIntake, VitalsEntry, ClinicalSummary, User
 from ..schemas import IntakeCreate, VitalsCreate, DecisionUpdate
 from datetime import datetime
-from ..services.ai import generate_clinical_summary, translate_text, language_name
+from ..services.ai import (
+    generate_clinical_summary,
+    translate_text,
+    language_name,
+    is_gemini_ready,
+    translate_text_with_status,
+)
 from ..auth import require_nurse, require_doctor, require_staff
 
 load_dotenv(override=True)
@@ -304,16 +310,28 @@ class TranslateRequest(BaseModel):
     fields: dict[str, Any]
 
 
-def _translate_value(value: Any, target_language: str) -> Any:
+def _translate_value(value: Any, target_language: str) -> tuple[Any, bool]:
     if value is None:
-        return value
+        return value, False
     if isinstance(value, str):
-        return translate_text(value, language_name(target_language))
+        return translate_text_with_status(value, language_name(target_language))
     if isinstance(value, list):
-        return [_translate_value(item, target_language) for item in value]
+        translated: list[Any] = []
+        any_ok = False
+        for item in value:
+            translated_item, ok = _translate_value(item, target_language)
+            translated.append(translated_item)
+            any_ok = any_ok or ok
+        return translated, any_ok
     if isinstance(value, dict):
-        return {k: _translate_value(v, target_language) for k, v in value.items()}
-    return value
+        translated: dict[str, Any] = {}
+        any_ok = False
+        for key, val in value.items():
+            translated_val, ok = _translate_value(val, target_language)
+            translated[key] = translated_val
+            any_ok = any_ok or ok
+        return translated, any_ok
+    return value, False
 
 
 @router.post("/translate")
@@ -324,13 +342,25 @@ def translate_payload(payload: TranslateRequest = Body(...), user: User = Depend
         raise HTTPException(status_code=400, detail="Unsupported language")
 
     if target_language == "en":
-        return {"language": "en", "fields": payload.fields}
+        return {"language": "en", "fields": payload.fields, "translated": False}
+
+    if not is_gemini_ready():
+        logger.warning("Gemini not configured; translation skipped.")
+        return {
+            "language": target_language,
+            "fields": payload.fields,
+            "translated": False,
+            "reason": "ai_not_configured",
+        }
 
     translated: dict[str, Any] = {}
+    any_ok = False
     for key, value in (payload.fields or {}).items():
-        translated[key] = _translate_value(value, target_language)
+        translated_value, ok = _translate_value(value, target_language)
+        translated[key] = translated_value
+        any_ok = any_ok or ok
 
-    return {"language": target_language, "fields": translated}
+    return {"language": target_language, "fields": translated, "translated": any_ok}
 
 
 @router.post("/seed-demo-data")

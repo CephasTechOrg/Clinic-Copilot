@@ -306,7 +306,7 @@
       return null;
     }
     const data = await res.json().catch(() => ({}));
-    return data.fields || null;
+    return data || null;
   };
 
   const applyLanguage = async (lang) => {
@@ -330,15 +330,19 @@
       window.showToast("Translating", "Updating clinical text...", false);
     }
 
-    const translated = await fetchTranslation(lang, baseFields);
-    if (translated) {
-      translationCache[cacheKey][lang] = translated;
-      applyTranslatedFields(translated);
-    } else {
-      applyTranslatedFields(baseFields);
-      if (window.showToast) {
+    const response = await fetchTranslation(lang, baseFields);
+    if (response && response.fields) {
+      translationCache[cacheKey][lang] = response.fields;
+      applyTranslatedFields(response.fields);
+      if (response.translated === false && window.showToast) {
         window.showToast("Translation Unavailable", "Showing English instead.", true);
       }
+      return;
+    }
+
+    applyTranslatedFields(baseFields);
+    if (window.showToast) {
+      window.showToast("Translation Unavailable", "Showing English instead.", true);
     }
   };
 
