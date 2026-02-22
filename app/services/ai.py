@@ -76,6 +76,19 @@ def gemini_status() -> dict:
     }
 
 
+def _extract_text_from_response(response: Any) -> str:
+    try:
+        candidates = getattr(response, "candidates", None) or []
+        if candidates:
+            parts = getattr(candidates[0].content, "parts", []) or []
+            text_parts = [getattr(p, "text", "") for p in parts if getattr(p, "text", "")]
+            if text_parts:
+                return "".join(text_parts)
+    except Exception:
+        pass
+    return getattr(response, "text", "") or ""
+
+
 def translate_text(text: str, target_language: str) -> str:
     if not text or not str(text).strip():
         return text
@@ -93,7 +106,7 @@ def translate_text(text: str, target_language: str) -> str:
             model=MODEL_NAME,
             contents=prompt,
         )
-        output = getattr(response, "text", "") or ""
+        output = _extract_text_from_response(response)
         output = output.strip()
         if not output:
             logger.warning("Gemini translate returned empty text; using original.")
@@ -120,7 +133,7 @@ def translate_text_with_status(text: str, target_language: str) -> tuple[str, bo
             model=MODEL_NAME,
             contents=prompt,
         )
-        output = getattr(response, "text", "") or ""
+        output = _extract_text_from_response(response)
         output = output.strip()
         if not output:
             logger.warning("Gemini translate returned empty text; using original.")
@@ -151,7 +164,7 @@ def translate_fields_payload(fields: Dict[str, Any], target_language: str) -> tu
                 model=MODEL_NAME,
                 contents=prompt,
             )
-            output = getattr(response, "text", "") or ""
+            output = _extract_text_from_response(response)
             output = output.strip()
             if "```" in output:
                 output = output.split("```")[1]
@@ -213,15 +226,7 @@ def generate_clinical_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
             model=MODEL_NAME,
             contents=prompt,
         )
-
-        text_output = getattr(response, "text", None)
-        if not text_output:
-            try:
-                candidate = response.candidates[0]
-                parts = candidate.content.parts
-                text_output = "".join(getattr(p, "text", "") for p in parts).strip()
-            except Exception:
-                text_output = ""
+        text_output = _extract_text_from_response(response)
 
         text_output = text_output.strip()
         if not text_output:

@@ -338,7 +338,9 @@
         const reason = response.reason || "unavailable";
         const message = reason === "quota_exceeded"
           ? "Gemini quota exceeded. Showing English instead."
-          : "Translation unavailable. Showing English instead.";
+          : reason === "service_unavailable"
+            ? "Gemini is busy right now. Showing English instead."
+            : "Translation unavailable. Showing English instead.";
         window.showToast("Translation Unavailable", message, true);
       }
       return;
