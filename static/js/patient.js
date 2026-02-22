@@ -1,6 +1,8 @@
 (function () {
-  // API Base URL - allows file to work when opened directly
-  const API_BASE = "http://localhost:8000";
+  // API Base URL - auto-detect from current location
+  const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
+    ? 'http://localhost:8000' 
+    : window.location.origin;
   
   console.log('[Patient.js] Script loaded');
   

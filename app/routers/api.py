@@ -2,11 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 import os
+from dotenv import load_dotenv
 
 from ..db import get_db
-from ..models import PatientIntake, VitalsEntry, ClinicalSummary
+from ..models import PatientIntake, VitalsEntry, ClinicalSummary, User
 from ..schemas import IntakeCreate, VitalsCreate, DecisionUpdate
 from ..services.ai import generate_clinical_summary
+from ..auth import require_nurse, require_doctor, require_staff
+
+load_dotenv()
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -81,15 +85,21 @@ def _intake_to_dict(intake: PatientIntake) -> dict:
         else None,
     }
 
+def _demo_seed_allowed() -> bool:
+    value = os.getenv("ALLOW_DEMO_SEED", "")
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 
 @router.get("/intakes")
-def list_intakes(db: Session = Depends(get_db)):
+def list_intakes(db: Session = Depends(get_db), user: User = Depends(require_staff)):
+    """List all intakes. Requires NURSE or DOCTOR role."""
     intakes = db.execute(select(PatientIntake).order_by(PatientIntake.created_at.desc())).scalars().all()
     return [_intake_to_dict(i) for i in intakes]
 
 
 @router.get("/intakes/{intake_id}")
-def get_intake(intake_id: int, db: Session = Depends(get_db)):
+def get_intake(intake_id: int, db: Session = Depends(get_db), user: User = Depends(require_staff)):
+    """Get a specific intake. Requires NURSE or DOCTOR role."""
     intake = db.get(PatientIntake, intake_id)
     if not intake:
         raise HTTPException(status_code=404, detail="Intake not found")
@@ -107,7 +117,8 @@ def create_intake(payload: IntakeCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/intakes/{intake_id}/vitals")
-def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(get_db)):
+def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(get_db), user: User = Depends(require_nurse)):
+    """Submit vitals for an intake. Requires NURSE role."""
     intake = db.get(PatientIntake, intake_id)
     if not intake:
         raise HTTPException(status_code=404, detail="Intake not found")
@@ -170,7 +181,8 @@ def submit_vitals(intake_id: int, payload: VitalsCreate, db: Session = Depends(g
 
 
 @router.post("/intakes/{intake_id}/decision")
-def update_decision(intake_id: int, payload: DecisionUpdate, db: Session = Depends(get_db)):
+def update_decision(intake_id: int, payload: DecisionUpdate, db: Session = Depends(get_db), user: User = Depends(require_doctor)):
+    """Update decision for an intake. Requires DOCTOR role."""
     intake = db.get(PatientIntake, intake_id)
     if not intake or not intake.clinical_summary:
         raise HTTPException(status_code=404, detail="Summary not found")
@@ -194,6 +206,9 @@ def seed_demo_data(db: Session = Depends(get_db)):
     """
     Seeds the database with demo patient data for testing/demo purposes.
     """
+    if not _demo_seed_allowed():
+        raise HTTPException(status_code=404, detail="Not found")
+
     demo_patients = [
         {
             "full_name": "John Anderson",
@@ -227,7 +242,7 @@ def seed_demo_data(db: Session = Depends(get_db)):
             "sex": "Male",
             "address": "789 Pine Road, Wellness City",
             "chief_complaint": "Persistent cough and fever",
-            "symptoms": "Dry cough for 5 days, fever up to 102°F, fatigue, mild shortness of breath with exertion.",
+            "symptoms": "Dry cough for 5 days, fever up to 102 F, fatigue, mild shortness of breath with exertion.",
             "duration": "5 days",
             "severity": "5/10",
             "history": "Asthma",
@@ -245,3 +260,82 @@ def seed_demo_data(db: Session = Depends(get_db)):
         created_ids.append(intake.id)
     
     return {"status": "success", "created_patients": len(demo_patients), "ids": created_ids}
+
+
+@router.post("/seed-demo-users")
+def seed_demo_users(db: Session = Depends(get_db)):
+    """
+    Create demo staff users for testing.
+    Creates 2 nurses and 2 doctors with preset credentials.
+    
+    WARNING: Demo endpoint - remove in production!
+    """
+    if not _demo_seed_allowed():
+        raise HTTPException(status_code=404, detail="Not found")
+
+    try:
+        from ..models import User
+        from ..auth import hash_password
+        
+        demo_users = [
+            {
+                "staff_id": "NURSE-1001",
+                "password": "nurse123",
+                "role": "NURSE",
+                "full_name": "Nurse Jane Smith"
+            },
+            {
+                "staff_id": "NURSE-1002",
+                "password": "nurse123",
+                "role": "NURSE",
+                "full_name": "Nurse Mike Johnson"
+            },
+            {
+                "staff_id": "DOC-2001",
+                "password": "doctor123",
+                "role": "DOCTOR",
+                "full_name": "Dr. Sarah Patel"
+            },
+            {
+                "staff_id": "DOC-2002",
+                "password": "doctor123",
+                "role": "DOCTOR",
+                "full_name": "Dr. James Wilson"
+            }
+        ]
+        
+        created_users = []
+        for user_data in demo_users:
+            # Check if user already exists
+            existing = db.query(User).filter(User.staff_id == user_data["staff_id"]).first()
+            if existing:
+                continue
+            
+            user = User(
+                staff_id=user_data["staff_id"],
+                password_hash=hash_password(user_data["password"]),
+                role=user_data["role"],
+                full_name=user_data["full_name"],
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            created_users.append({
+                "staff_id": user.staff_id,
+                "role": user.role,
+                "full_name": user.full_name
+            })
+        
+        return {
+            "status": "success",
+            "created_users": len(created_users),
+            "users": created_users,
+            "credentials": {
+                "nurses": "NURSE-1001 or NURSE-1002 / nurse123",
+                "doctors": "DOC-2001 or DOC-2002 / doctor123"
+            }
+        }
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}\n{traceback.format_exc()}")

@@ -1,6 +1,34 @@
 (function () {
-  // API Base URL - allows file to work when opened directly
-  const API_BASE = "http://localhost:8000";
+  // API Base URL - auto-detect from current location
+  const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
+    ? 'http://localhost:8000' 
+    : window.location.origin;
+  const LOGIN_URL = (window.location.protocol === 'file:') ? 'doctor_login.html' : "/doctor/login";
+  
+  console.log('[Doctor.js] Script loaded');
+  
+  // Check authentication
+  if (typeof AUTH !== 'undefined') {
+    if (!AUTH.requireRole('DOCTOR', LOGIN_URL)) {
+      return; // Will redirect to login
+    }
+    console.log('[Doctor.js] Authenticated as:', AUTH.getUser()?.full_name);
+    
+    // Display user name in header
+    const userNameEl = document.getElementById('user-name');
+    if (userNameEl && AUTH.getUser()) {
+      userNameEl.textContent = AUTH.getUser().full_name || AUTH.getUser().staff_id;
+    }
+  }
+  
+  // Helper to get auth headers
+  const getHeaders = () => {
+    const headers = { "Content-Type": "application/json" };
+    if (typeof AUTH !== 'undefined' && AUTH.getToken()) {
+      headers["Authorization"] = `Bearer ${AUTH.getToken()}`;
+    }
+    return headers;
+  };
   
   const queue = document.getElementById("doctor-queue");
   const queueEmpty = document.getElementById("doctor-queue-empty");
@@ -136,7 +164,7 @@
     vitalsSummary.innerHTML = `
       <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">HR</p><p class="text-lg font-bold ${hrClass}">${vitals.heart_rate}</p></div>
       <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">RR</p><p class="text-lg font-bold ${rrClass}">${vitals.respiratory_rate}</p></div>
-      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">Temp</p><p class="text-lg font-bold ${tempClass}">${vitals.temperature_c}°C</p></div>
+      <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">Temp</p><p class="text-lg font-bold ${tempClass}">${vitals.temperature_c}&deg;C</p></div>
       <div class="text-center p-3 bg-slate-50 rounded-xl"><p class="text-xs text-slate-500 font-medium">SpO2</p><p class="text-lg font-bold ${spo2Class}">${vitals.spo2}%</p></div>
       <div class="text-center p-3 bg-slate-50 rounded-xl col-span-2"><p class="text-xs text-slate-500 font-medium">Blood Pressure</p><p class="text-lg font-bold ${bpClass}">${vitals.systolic_bp}/${vitals.diastolic_bp}</p></div>
     `;
@@ -166,7 +194,7 @@
               <h3 class="font-bold text-slate-800">${i.full_name}</h3>
               <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass} uppercase">${priority}</span>
             </div>
-            <p class="text-sm text-slate-600 mb-1">${i.age} yrs • ${i.sex || 'N/A'}</p>
+            <p class="text-sm text-slate-600 mb-1">${i.age} yrs - ${i.sex || 'N/A'}</p>
             <p class="text-xs text-slate-500 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
             <div class="flex items-center gap-2 mt-2 text-xs text-slate-400">
               <span class="material-symbols-outlined text-xs">schedule</span>
@@ -199,7 +227,14 @@
   };
 
   const loadCase = async (id) => {
-    const res = await fetch(API_BASE + `/api/intakes/${encodeURIComponent(id)}`);
+    const res = await fetch(API_BASE + `/api/intakes/${encodeURIComponent(id)}`, {
+      headers: getHeaders()
+    });
+    if (res.status === 401) {
+      console.log('[Doctor.js] 401 - redirecting to login');
+      if (typeof AUTH !== 'undefined') AUTH.logout(LOGIN_URL);
+      return;
+    }
     if (!res.ok) throw new Error("Failed to load case");
     const data = await res.json();
     updateDetails(data);
@@ -208,10 +243,23 @@
   };
 
   const loadQueue = async () => {
-    const res = await fetch(API_BASE + "/api/intakes");
+    const res = await fetch(API_BASE + "/api/intakes", {
+      headers: getHeaders()
+    });
+    if (res.status === 401) {
+      console.log('[Doctor.js] 401 - redirecting to login');
+      if (typeof AUTH !== 'undefined') AUTH.logout(LOGIN_URL);
+      return;
+    }
     const data = await res.json();
     const items = Array.isArray(data) ? data : data.items || [];
-    const ready = items.filter((i) => i.has_summary);
+    const ready = items.filter((i) => {
+      if (i.workflow_status) {
+        return i.workflow_status === "PENDING_DOCTOR";
+      }
+      const decision = i.clinical_summary?.decision || "PENDING";
+      return i.has_summary && decision === "PENDING";
+    });
 
     renderQueue(ready);
     if (queueSubtitle) queueSubtitle.textContent = `${ready.length} case${ready.length !== 1 ? 's' : ''} ready for review`;
@@ -248,12 +296,17 @@
     try {
       const res = await fetch(API_BASE + `/api/intakes/${currentIntakeId}/decision`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify({
           decision,
           doctor_note: doctorNote ? doctorNote.value : "",
         }),
       });
+      if (res.status === 401) {
+        console.log('[Doctor.js] 401 - redirecting to login');
+        if (typeof AUTH !== 'undefined') AUTH.logout(LOGIN_URL);
+        return;
+      }
       if (!res.ok) {
         const msg = await res.text();
         throw new Error(msg || "Decision failed");
@@ -262,7 +315,7 @@
       if (window.showSuccessModal) {
         window.showSuccessModal(decision === "ADMIT");
       } else {
-        alert(`✅ Decision saved: ${decision === "ADMIT" ? "Patient Admitted" : "Not Admitted"}`);
+        alert(`Decision saved: ${decision === "ADMIT" ? "Patient Admitted" : "Not Admitted"}`);
         window.location.reload();
       }
     } catch (err) {

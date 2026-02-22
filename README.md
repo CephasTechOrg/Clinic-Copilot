@@ -2,6 +2,11 @@
 
 Clinic Co-Pilot is a lightweight AI-powered clinical intake + decision-support assistant designed to reduce wait-time friction and prevent critical details from being overlooked during rushed patient encounters.
 
+## Pitch
+
+- Full pitch: `docs/pitch.md`
+- Quick pitch: `pitch.md`
+
 ## What It Does
 
 **Clinic Co-Pilot** supports 3 roles:
@@ -34,13 +39,13 @@ Clinic Co-Pilot reduces cognitive load and transforms raw data into clarity - fa
 - SQLite (local DB)
 - AI layer via prompt + structured JSON output
 
-## Repo Structure
+## Project Structure
 
-- `app/routers/` API + UI routes
-- `user_interface/` static HTML pages (patient / nurse / doctor)
-- `static/js/` page scripts
-- `app/prompts/` prompts used by the AI summarizer
-- `app/services/` AI service + optional rules engine
+- Overview: `structure.md`
+- Full breakdown: `docs/structure.md`
+- `app/` FastAPI app, routes, services
+- `user_interface/` HTML pages (patient / nurse / doctor)
+- `static/js/` UI scripts
 - `docs/` pitch + architecture
 
 ## Run Locally

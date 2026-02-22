@@ -1,8 +1,34 @@
 (function () {
-  // API Base URL - allows file to work when opened directly
-  const API_BASE = "http://localhost:8000";
+  // API Base URL - auto-detect from current location
+  const API_BASE = (window.location.protocol === 'file:' || !window.location.origin.includes('localhost')) 
+    ? 'http://localhost:8000' 
+    : window.location.origin;
+  const LOGIN_URL = (window.location.protocol === 'file:') ? 'nurse_login.html' : "/nurse/login";
   
   console.log('[Nurse.js] Script loaded');
+  
+  // Check authentication
+  if (typeof AUTH !== 'undefined') {
+    if (!AUTH.requireRole('NURSE', LOGIN_URL)) {
+      return; // Will redirect to login
+    }
+    console.log('[Nurse.js] Authenticated as:', AUTH.getUser()?.full_name);
+    
+    // Display user name in header
+    const userNameEl = document.getElementById('user-name');
+    if (userNameEl && AUTH.getUser()) {
+      userNameEl.textContent = AUTH.getUser().full_name || AUTH.getUser().staff_id;
+    }
+  }
+  
+  // Helper to get auth headers
+  const getHeaders = () => {
+    const headers = { "Content-Type": "application/json" };
+    if (typeof AUTH !== 'undefined' && AUTH.getToken()) {
+      headers["Authorization"] = `Bearer ${AUTH.getToken()}`;
+    }
+    return headers;
+  };
   
   const queueList = document.getElementById("queue-list");
   const queueEmpty = document.getElementById("queue-empty");
@@ -68,7 +94,7 @@
                   <h3 class="font-bold text-slate-800 truncate">${i.full_name}</h3>
                   <span class="text-xs font-bold px-2 py-1 rounded-full ${priorityBadgeClass(priority)} uppercase flex-shrink-0">${priority}</span>
                 </div>
-                <p class="text-sm text-slate-600 mt-0.5">${i.age} years old • ${i.sex || 'N/A'}</p>
+                <p class="text-sm text-slate-600 mt-0.5">${i.age} years old - ${i.sex || 'N/A'}</p>
                 <p class="text-xs text-slate-500 mt-1 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
                 <div class="flex items-center gap-2 mt-2">
                   <span class="material-symbols-outlined text-slate-400 text-xs">schedule</span>
@@ -96,8 +122,18 @@
   const loadQueue = async () => {
     console.log('[Nurse.js] loadQueue called');
     try {
-      const res = await fetch(API_BASE + "/api/intakes");
+      const res = await fetch(API_BASE + "/api/intakes", {
+        headers: getHeaders()
+      });
       console.log('[Nurse.js] API response status:', res.status);
+      
+      // Handle auth errors
+      if (res.status === 401) {
+        if (typeof AUTH !== 'undefined') AUTH.clearAuth();
+        window.location.href = LOGIN_URL;
+        return;
+      }
+      
       const data = await res.json();
       console.log('[Nurse.js] API data:', data);
       const items = Array.isArray(data) ? data : data.items || [];
@@ -143,9 +179,18 @@
       if (!target) return;
       const intakeId = target.getAttribute("data-intake-id");
       if (!intakeId) return;
-      fetch(API_BASE + `/api/intakes/${encodeURIComponent(intakeId)}`)
-        .then((res) => res.json())
-        .then((intake) => setSelected(intake))
+      fetch(API_BASE + `/api/intakes/${encodeURIComponent(intakeId)}`, {
+        headers: getHeaders()
+      })
+        .then((res) => {
+          if (res.status === 401) {
+            if (typeof AUTH !== 'undefined') AUTH.clearAuth();
+            window.location.href = LOGIN_URL;
+            return;
+          }
+          return res.json();
+        })
+        .then((intake) => { if (intake) setSelected(intake); })
         .catch((err) => console.error(err));
     });
   }
@@ -187,9 +232,17 @@
       try {
         const res = await fetch(API_BASE + `/api/intakes/${selectedIntake.id}/vitals`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getHeaders(),
           body: JSON.stringify(payload),
         });
+        
+        // Handle auth errors
+        if (res.status === 401) {
+          if (typeof AUTH !== 'undefined') AUTH.clearAuth();
+          window.location.href = LOGIN_URL;
+          return;
+        }
+        
         if (!res.ok) {
           const msg = await res.text();
           throw new Error(msg || "Failed to save vitals");
