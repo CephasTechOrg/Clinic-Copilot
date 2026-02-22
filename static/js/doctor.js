@@ -78,15 +78,15 @@
     if (!priorityPill) return;
     priorityPill.textContent = norm;
     
-    let pillClass = "px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide border ";
+    let pillClass = "px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wide ";
     if (norm === "HIGH") {
-      pillClass += "bg-red-100 text-red-600 border-red-200";
+      pillClass += "bg-red-50 text-red-600";
     } else if (norm === "MED") {
-      pillClass += "bg-amber-100 text-amber-600 border-amber-200";
+      pillClass += "bg-amber-50 text-amber-600";
     } else if (norm === "LOW") {
-      pillClass += "bg-emerald-100 text-emerald-600 border-emerald-200";
+      pillClass += "bg-emerald-50 text-emerald-600";
     } else {
-      pillClass += "bg-slate-100 text-slate-600 border-slate-200";
+      pillClass += "bg-slate-100 text-slate-500";
     }
     priorityPill.className = pillClass;
 
@@ -138,7 +138,7 @@
     if (!queueSubtitle) return;
     const count = lastCounts[mode] || 0;
     if (mode === "pending") {
-      queueSubtitle.textContent = `${count} case${count !== 1 ? 's' : ''} ready for review`;
+      queueSubtitle.textContent = `${count} case${count !== 1 ? 's' : ''} ready for review • sorted by urgency`;
     } else if (mode === "admitted") {
       queueSubtitle.textContent = `${count} admitted patient${count !== 1 ? 's' : ''}`;
     } else if (mode === "approved") {
@@ -172,6 +172,89 @@
   };
 
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+  const parseTimestamp = (value) => {
+    if (!value) return null;
+    const iso = String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
+  };
+
+  const minutesSince = (value) => {
+    const date = parseTimestamp(value);
+    if (!date) return 0;
+    const diffMs = Date.now() - date.getTime();
+    return Math.max(0, Math.round(diffMs / 60000));
+  };
+
+  const formatWait = (minutes) => {
+    if (!minutes || minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m`;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  };
+
+  const getQueueStart = (item) => {
+    return item?.clinical_summary?.created_at || item?.doctor_status_updated_at || item?.created_at;
+  };
+
+  const computeTriageScore = (item) => {
+    const priority = (item?.clinical_summary?.priority_level || item?.priority_level || "LOW").toUpperCase();
+    let score = 0;
+    if (priority === "HIGH") score += 70;
+    else if (priority === "MED") score += 40;
+    else score += 15;
+
+    const v = item?.vitals || {};
+    if (v.spo2 !== undefined) {
+      if (v.spo2 < 90) score += 25;
+      else if (v.spo2 < 94) score += 15;
+    }
+    if (v.heart_rate !== undefined) {
+      if (v.heart_rate >= 130) score += 15;
+      else if (v.heart_rate >= 110) score += 8;
+    }
+    if (v.respiratory_rate !== undefined) {
+      if (v.respiratory_rate >= 30) score += 12;
+      else if (v.respiratory_rate >= 21) score += 6;
+    }
+    if (v.temperature_c !== undefined) {
+      if (v.temperature_c >= 40) score += 10;
+      else if (v.temperature_c >= 38.5) score += 5;
+    }
+    if (v.systolic_bp !== undefined && v.systolic_bp < 90) {
+      score += 12;
+    }
+
+    const waitMinutes = minutesSince(getQueueStart(item));
+    score += Math.min(15, Math.floor(waitMinutes / 5));
+
+    return clamp(score, 0, 100);
+  };
+
+  const getSlaStatus = (priority, waitMinutes) => {
+    const level = (priority || "LOW").toUpperCase();
+    if (level === "HIGH") {
+      if (waitMinutes >= 15) return "overdue";
+      if (waitMinutes >= 10) return "due";
+      return "ok";
+    }
+    if (level === "MED") {
+      if (waitMinutes >= 60) return "overdue";
+      if (waitMinutes >= 45) return "due";
+      return "ok";
+    }
+    if (waitMinutes >= 120) return "overdue";
+    if (waitMinutes >= 90) return "due";
+    return "ok";
+  };
+
+  const getSortTime = (item) => {
+    const date = parseTimestamp(item?.doctor_status_updated_at || item?.created_at);
+    return date ? date.getTime() : 0;
+  };
 
   const VITAL_RANGES = {
     heart_rate: { label: "HR", min: 40, max: 160, normalMin: 60, normalMax: 100, unit: "bpm" },
@@ -298,34 +381,34 @@
     if (!vitalsSummary) return;
     if (!vitals) {
       vitalsSummary.innerHTML = `
-        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">HR</p><p class="text-base font-bold text-slate-800">--</p></div>
-        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">RR</p><p class="text-base font-bold text-slate-800">--</p></div>
-        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Temp</p><p class="text-base font-bold text-slate-800">--</p></div>
-        <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">SpO2</p><p class="text-base font-bold text-slate-800">--</p></div>
-        <div class="text-center p-2.5 bg-slate-50 rounded-lg col-span-2"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Blood Pressure</p><p class="text-base font-bold text-slate-800">--/--</p></div>
+        <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">HR</p><p class="text-sm font-semibold text-slate-700">--</p></div>
+        <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">RR</p><p class="text-sm font-semibold text-slate-700">--</p></div>
+        <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">Temp</p><p class="text-sm font-semibold text-slate-700">--</p></div>
+        <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">SpO2</p><p class="text-sm font-semibold text-slate-700">--</p></div>
+        <div class="text-center p-2 bg-slate-50 rounded-lg col-span-2"><p class="text-[10px] text-slate-400 font-medium">Blood Pressure</p><p class="text-sm font-semibold text-slate-700">--/--</p></div>
       `;
       renderVitalsChart(null);
       return;
     }
     
     // Highlight abnormal values
-    const hrClass = (vitals.heart_rate > 100 || vitals.heart_rate < 60) ? "text-amber-600" : "text-slate-800";
-    const rrClass = vitals.respiratory_rate > 20 ? "text-amber-600" : "text-slate-800";
-    const tempClass = vitals.temperature_c >= 38 ? "text-red-600" : "text-slate-800";
-    const spo2Class = vitals.spo2 < 95 ? "text-red-600" : "text-slate-800";
-    const bpClass = (vitals.systolic_bp > 140 || vitals.systolic_bp < 90) ? "text-amber-600" : "text-slate-800";
+    const hrClass = (vitals.heart_rate > 100 || vitals.heart_rate < 60) ? "text-amber-600" : "text-slate-700";
+    const rrClass = vitals.respiratory_rate > 20 ? "text-amber-600" : "text-slate-700";
+    const tempClass = vitals.temperature_c >= 38 ? "text-red-600" : "text-slate-700";
+    const spo2Class = vitals.spo2 < 95 ? "text-red-600" : "text-slate-700";
+    const bpClass = (vitals.systolic_bp > 140 || vitals.systolic_bp < 90) ? "text-amber-600" : "text-slate-700";
     
     vitalsSummary.innerHTML = `
-      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">HR</p><p class="text-base font-bold ${hrClass}">${vitals.heart_rate}</p></div>
-      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">RR</p><p class="text-base font-bold ${rrClass}">${vitals.respiratory_rate}</p></div>
-      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Temp</p><p class="text-base font-bold ${tempClass}">${vitals.temperature_c}&deg;C</p></div>
-      <div class="text-center p-2.5 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-500 font-medium mb-0.5">SpO2</p><p class="text-base font-bold ${spo2Class}">${vitals.spo2}%</p></div>
-      <div class="text-center p-2.5 bg-slate-50 rounded-lg col-span-2"><p class="text-[10px] text-slate-500 font-medium mb-0.5">Blood Pressure</p><p class="text-base font-bold ${bpClass}">${vitals.systolic_bp}/${vitals.diastolic_bp}</p></div>
+      <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">HR</p><p class="text-sm font-semibold ${hrClass}">${vitals.heart_rate}</p></div>
+      <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">RR</p><p class="text-sm font-semibold ${rrClass}">${vitals.respiratory_rate}</p></div>
+      <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">Temp</p><p class="text-sm font-semibold ${tempClass}">${vitals.temperature_c}&deg;C</p></div>
+      <div class="text-center p-2 bg-slate-50 rounded-lg"><p class="text-[10px] text-slate-400 font-medium">SpO2</p><p class="text-sm font-semibold ${spo2Class}">${vitals.spo2}%</p></div>
+      <div class="text-center p-2 bg-slate-50 rounded-lg col-span-2"><p class="text-[10px] text-slate-400 font-medium">Blood Pressure</p><p class="text-sm font-semibold ${bpClass}">${vitals.systolic_bp}/${vitals.diastolic_bp}</p></div>
     `;
     renderVitalsChart(vitals);
   };
 
-  const renderQueue = (items, targetEl, emptyEl, showStatus = false) => {
+  const renderQueue = (items, targetEl, emptyEl, showStatus = false, showWait = false) => {
     if (!targetEl) return;
     if (!items || items.length === 0) {
       targetEl.innerHTML = '';
@@ -339,25 +422,46 @@
         const priority = i.clinical_summary?.priority_level || i.priority_level || "PENDING";
         const isActive = currentIntakeId === i.id;
         let priorityBadgeClass = "bg-slate-100 text-slate-500";
-        if (priority === "HIGH") priorityBadgeClass = "bg-red-100 text-red-600";
-        else if (priority === "MED") priorityBadgeClass = "bg-amber-100 text-amber-600";
-        else if (priority === "LOW") priorityBadgeClass = "bg-emerald-100 text-emerald-600";
+        if (priority === "HIGH") priorityBadgeClass = "bg-red-50 text-red-600";
+        else if (priority === "MED") priorityBadgeClass = "bg-amber-50 text-amber-600";
+        else if (priority === "LOW") priorityBadgeClass = "bg-emerald-50 text-emerald-600";
 
         const status = getDoctorStatus(i);
-        const statusLabel = showStatus ? `<span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">${status}</span>` : "";
+        const statusLabel = showStatus ? `<span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-50 text-slate-500 uppercase">${status}</span>` : "";
+
+        const waitMinutes = minutesSince(getQueueStart(i));
+        const waitLabel = formatWait(waitMinutes);
+        const slaStatus = getSlaStatus(priority, waitMinutes);
+        let slaClass = "bg-slate-100 text-slate-500";
+        let slaText = `Wait ${waitLabel}`;
+        if (slaStatus === "due") {
+          slaClass = "bg-amber-100 text-amber-700";
+          slaText = `Due ${waitLabel}`;
+        } else if (slaStatus === "overdue") {
+          slaClass = "bg-red-100 text-red-700";
+          slaText = `Overdue ${waitLabel}`;
+        }
+        const waitChip = showWait ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${slaClass}">${slaText}</span>` : "";
+        const timestamp = formatTimestamp(i.doctor_status_updated_at || i.created_at);
+
+        // Format sex properly (Male/Female instead of M/F)
+        const sexDisplay = i.sex ? (i.sex.charAt(0).toUpperCase() + i.sex.slice(1).toLowerCase()) : 'N/A';
         
         return `
           <div class="case-card ${isActive ? 'active' : ''}" data-id="${i.id}">
-            <div class="flex items-start justify-between gap-2 mb-1.5">
-              <h3 class="font-semibold text-slate-800 text-sm">${i.full_name}</h3>
-              <div class="flex items-center gap-1.5">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <h3 class="font-semibold text-slate-800 text-sm leading-tight">${i.full_name}</h3>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
                 ${statusLabel}
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded ${priorityBadgeClass} uppercase">${priority}</span>
               </div>
             </div>
-            <p class="text-xs text-slate-500 mb-1">${i.age} yrs • ${i.sex || 'N/A'}</p>
-            <p class="text-[11px] text-slate-400">${formatTimestamp(i.doctor_status_updated_at || i.created_at)}</p>
-            <p class="text-xs text-slate-600 line-clamp-1">${i.chief_complaint}</p>
+            <p class="text-xs text-slate-500 mb-1.5">${i.age} years, ${sexDisplay}</p>
+            <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${i.chief_complaint}</p>
+            <div class="mt-2 flex items-center justify-between">
+              <p class="text-[11px] text-slate-400">${timestamp}</p>
+              ${waitChip}
+            </div>
           </div>
         `;
       })
@@ -386,9 +490,13 @@
   const updateDetails = (data) => {
     currentIntakeId = data.id;
     if (patientName) {
-      patientName.textContent = `${data.full_name}, ${data.age}${data.sex ? data.sex[0] : ''}`;
+      // Format: "John Doe" (name only, age/sex shown separately)
+      patientName.textContent = data.full_name || "Unknown Patient";
     }
-    if (patientMeta) patientMeta.textContent = `Patient ID: #${data.id}`;
+    if (patientMeta) {
+      // Format age and sex properly: "45 years, Male"
+      patientMeta.textContent = `Patient ID: #${data.id}`;
+    }
     if (patientTimestamp) {
       const stamp = data.doctor_status_updated_at || data.created_at;
       patientTimestamp.textContent = `Last update: ${formatTimestamp(stamp)}`;
@@ -454,6 +562,11 @@
     const approved = items.filter((i) => getDoctorStatus(i) === "APPROVED");
     const delayed = items.filter((i) => getDoctorStatus(i) === "DELAYED");
 
+    pending.sort((a, b) => computeTriageScore(b) - computeTriageScore(a));
+    admitted.sort((a, b) => getSortTime(b) - getSortTime(a));
+    approved.sort((a, b) => getSortTime(b) - getSortTime(a));
+    delayed.sort((a, b) => getSortTime(b) - getSortTime(a));
+
     lastCounts = {
       pending: pending.length,
       admitted: admitted.length,
@@ -461,7 +574,7 @@
       delayed: delayed.length,
     };
 
-    renderQueue(pending, queuePending, queuePendingEmpty, false);
+    renderQueue(pending, queuePending, queuePendingEmpty, false, true);
     renderQueue(admitted, queueAdmitted, queueAdmittedEmpty, true);
     renderQueue(approved, queueApproved, queueApprovedEmpty, true);
     renderQueue(delayed, queueDelayed, queueDelayedEmpty, true);

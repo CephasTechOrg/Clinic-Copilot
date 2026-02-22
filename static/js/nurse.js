@@ -66,6 +66,18 @@
     return "bg-slate-100 text-slate-600 border border-slate-200";
   };
 
+  const formatTimestamp = (value) => {
+    if (!value) return "Just now";
+    try {
+      const iso = String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z";
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return "Just now";
+      return date.toLocaleString();
+    } catch (e) {
+      return "Just now";
+    }
+  };
+
   const renderQueue = (items, targetEl, emptyEl) => {
     if (!targetEl) return;
     if (!items || items.length === 0) {
@@ -79,6 +91,7 @@
       .map((i, index) => {
         const priority = i.priority_level || "NEW";
         const isSelected = selectedIntake && selectedIntake.id === i.id;
+        const localTime = formatTimestamp(i.created_at || i.doctor_status_updated_at);
         return `
           <div class="patient-card bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 ${isSelected ? 'selected border-teal-400' : 'border-white/50'} shadow-lg shadow-slate-200/30 ${priorityClass(priority)}" data-intake-id="${i.id}">
             <div class="flex items-start gap-3">
@@ -94,7 +107,7 @@
                 <p class="text-xs text-slate-500 mt-1 truncate"><span class="font-medium">CC:</span> ${i.chief_complaint}</p>
                 <div class="flex items-center gap-2 mt-2">
                   <span class="material-symbols-outlined text-slate-400 text-xs">schedule</span>
-                  <span class="text-xs text-slate-400">${i.created_at || 'Just now'}</span>
+                  <span class="text-xs text-slate-400">${localTime}</span>
                 </div>
               </div>
             </div>

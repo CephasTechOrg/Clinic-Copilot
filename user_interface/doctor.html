@@ -49,10 +49,11 @@
         theme: {
           extend: {
             colors: {
-              primary: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' },
-              accent: { 50: '#faf5ff', 100: '#f3e8ff', 500: '#8b5cf6', 600: '#7c3aed' },
+              primary: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' },
+              accent: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 500: '#3b82f6', 600: '#2563eb' },
               success: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a' },
               danger: { 50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626' },
+              warning: { 50: '#fffbeb', 100: '#fef3c7', 500: '#f59e0b', 600: '#d97706' },
             },
             fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
           }
@@ -66,56 +67,52 @@
         -moz-osx-font-smoothing: grayscale;
       }
       
-      /* Glass effects */
-      .glass { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-      
-      /* Cards */
+      /* Cards - clean and minimal */
       .card {
         background: white;
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
       }
       
       /* Case cards in queue */
       .case-card {
         background: white;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 14px;
+        border-radius: 10px;
+        padding: 12px 14px;
         cursor: pointer;
         transition: all 0.15s ease;
       }
       .case-card:hover {
         border-color: #cbd5e1;
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+        background: #f8fafc;
       }
       .case-card.active {
-        border-color: #0ea5e9;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        border-color: #64748b;
+        background: #f8fafc;
       }
       
       /* Form inputs */
       .form-textarea {
         width: 100%;
-        padding: 12px 14px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        font-size: 14px;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
         transition: all 0.2s ease;
         resize: none;
+        background: #f8fafc;
       }
       .form-textarea:focus {
         outline: none;
-        border-color: #0ea5e9;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        border-color: #94a3b8;
+        background: white;
       }
       
-      /* Risk gauge - simplified */
+      /* Risk gauge */
       .risk-bar {
-        height: 8px;
-        border-radius: 4px;
+        height: 6px;
+        border-radius: 3px;
         background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
         position: relative;
       }
@@ -123,33 +120,32 @@
         position: absolute;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         background: white;
-        border: 3px solid #1e293b;
+        border: 2px solid #334155;
         border-radius: 50%;
-        transition: left 0.6s ease-out;
+        transition: left 0.5s ease-out;
       }
 
       /* Severity dial */
       .severity-ring {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
         background: conic-gradient(#94a3b8 0% 0%, #e2e8f0 0% 100%);
         position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 0 0 0 1px #e2e8f0;
+        flex-shrink: 0;
       }
       .severity-ring::before {
         content: '';
         position: absolute;
-        inset: 10px;
+        inset: 8px;
         background: white;
         border-radius: 50%;
-        border: 1px solid #e2e8f0;
       }
       .severity-center {
         position: relative;
@@ -157,9 +153,9 @@
         text-align: center;
       }
       .severity-label {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
         color: #64748b;
       }
@@ -167,51 +163,49 @@
       /* Mini vitals chart */
       .vital-row {
         display: grid;
-        grid-template-columns: 44px 1fr 64px;
-        gap: 12px;
+        grid-template-columns: 40px 1fr 56px;
+        gap: 10px;
         align-items: center;
-        padding: 6px 8px;
-        border-radius: 10px;
+        padding: 5px 6px;
+        border-radius: 6px;
         background: #f8fafc;
-        border: 1px solid #eef2f7;
       }
       .vital-label {
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 600;
         color: #64748b;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
       }
       .vital-track {
         position: relative;
-        height: 6px;
+        height: 4px;
         background: #e2e8f0;
-        border-radius: 999px;
+        border-radius: 2px;
         overflow: hidden;
       }
       .vital-normal {
         position: absolute;
         top: 0;
         bottom: 0;
-        background: #c7f9d4;
-        opacity: 0.9;
+        background: #dcfce7;
       }
       .vital-indicator {
         position: absolute;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
-        background: #0f172a;
+        background: #334155;
       }
-      .vital-indicator.low { background: #f59e0b; }
-      .vital-indicator.high { background: #ef4444; }
-      .vital-indicator.normal { background: #22c55e; }
+      .vital-indicator.low { background: #d97706; }
+      .vital-indicator.high { background: #dc2626; }
+      .vital-indicator.normal { background: #16a34a; }
       .vital-value {
-        font-size: 12px;
-        font-weight: 700;
-        color: #0f172a;
+        font-size: 11px;
+        font-weight: 600;
+        color: #334155;
         text-align: right;
       }
       .vital-value.low { color: #b45309; }
@@ -219,56 +213,53 @@
       .vital-value.normal { color: #15803d; }
       
       /* Scrollbar */
-      .custom-scroll::-webkit-scrollbar { width: 6px; }
+      .custom-scroll::-webkit-scrollbar { width: 4px; }
       .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-      .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+      .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
       .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       
       /* Animations */
-      @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-      .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
-      .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      .animate-fade-in-up { animation: fadeInUp 0.25s ease-out forwards; }
       
-      /* Toast hidden by default */
+      /* Toast */
       .toast-hidden { transform: translateX(120%); opacity: 0; pointer-events: none; }
       .toast-visible { transform: translateX(0); opacity: 1; pointer-events: auto; }
     </style>
   </head>
-  <body class="bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/20 min-h-screen">
+  <body class="bg-slate-50 min-h-screen">
     
     <!-- Header -->
-    <header class="sticky top-0 z-50 glass border-b border-slate-200/50">
+    <header class="sticky top-0 z-50 bg-white border-b border-slate-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="flex items-center justify-between h-14">
           <!-- Logo -->
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-lg shadow-accent-500/20">
+            <div class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center">
               <span class="material-symbols-outlined text-white" style="font-size: 20px;">stethoscope</span>
             </div>
             <div class="hidden sm:block">
-              <h1 class="text-base font-bold text-slate-800">Clinic Co-Pilot</h1>
+              <h1 class="text-sm font-semibold text-slate-800">Clinic Co-Pilot</h1>
               <p class="text-[11px] text-slate-500 -mt-0.5">Doctor Dashboard</p>
             </div>
           </div>
           
-          <!-- Center - Workflow -->
+          <!-- Center - Status -->
           <div class="hidden md:flex items-center gap-2">
-            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-xs font-semibold text-emerald-700">Final Review</span>
+            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span class="text-xs font-medium text-slate-600">Final Review</span>
             </div>
-            <span class="text-xs text-slate-400">Step 3 of 3</span>
           </div>
           
           <!-- Right - User -->
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full">
-              <span class="material-symbols-outlined text-slate-600" style="font-size: 18px;">person</span>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
+              <span class="material-symbols-outlined text-slate-500" style="font-size: 16px;">person</span>
               <span id="user-name" class="text-sm font-medium text-slate-700 max-w-[100px] truncate"></span>
             </div>
-            <button onclick="AUTH.logout(window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
-              <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
+            <button onclick="AUTH.logout(window.APP_PATHS ? window.APP_PATHS.doctorLogin : '/doctor/login')" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Logout">
+              <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
             </button>
           </div>
         </div>
@@ -372,22 +363,19 @@
           
           <!-- Patient Header Card -->
           <div class="card p-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0">
-                  <span class="material-symbols-outlined text-primary-600" style="font-size: 28px;">person</span>
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-slate-500" style="font-size: 24px;">person</span>
                 </div>
                 <div>
-                  <h2 class="text-xl font-bold text-slate-800" id="patient-name">Select a case</h2>
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                    <p id="patient-meta">Patient ID: --</p>
-                    <span class="text-slate-300">•</span>
-                    <p id="patient-timestamp">Last update: --</p>
-                  </div>
+                  <h2 class="text-lg font-semibold text-slate-800" id="patient-name">Select a case</h2>
+                  <p class="text-sm text-slate-500 mt-0.5" id="patient-meta">-- years, -- • ID #--</p>
+                  <p class="text-xs text-slate-400 mt-1" id="patient-timestamp">--</p>
                 </div>
               </div>
-              <div class="flex items-center gap-3">
-                <span id="priority-pill" class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-500 border border-slate-200">
+              <div class="flex items-center gap-2">
+                <span id="priority-pill" class="px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wide bg-slate-100 text-slate-500">
                   Pending
                 </span>
               </div>
@@ -395,13 +383,8 @@
             
             <!-- Chief Complaint -->
             <div class="mt-4 pt-4 border-t border-slate-100">
-              <div class="flex items-start gap-2">
-                <span class="material-symbols-outlined text-amber-500 flex-shrink-0" style="font-size: 20px;">emergency</span>
-                <div>
-                  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Chief Complaint</p>
-                  <p class="text-sm font-medium text-slate-800" id="chief-complaint">--</p>
-                </div>
-              </div>
+              <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Chief Complaint</p>
+              <p class="text-sm text-slate-700 leading-relaxed" id="chief-complaint">--</p>
             </div>
           </div>
           
@@ -411,21 +394,19 @@
             <!-- Risk Assessment -->
             <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-amber-500" style="font-size: 20px;">speed</span>
-                <h3 class="font-semibold text-slate-800">Risk Assessment</h3>
+                <span class="material-symbols-outlined text-slate-400" style="font-size: 18px;">speed</span>
+                <h3 class="text-sm font-semibold text-slate-700">Risk Assessment</h3>
               </div>
               
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div class="flex items-center gap-6 mb-5">
                 <div class="severity-ring" id="severity-ring">
                   <div class="severity-center">
-                    <p class="text-2xl font-bold text-slate-800" id="urgency-score">--%</p>
+                    <p class="text-xl font-bold text-slate-800" id="urgency-score">--%</p>
                     <p class="severity-label" id="urgency-label">Severity</p>
                   </div>
                 </div>
                 <div class="flex-1">
-                  <p class="text-sm text-slate-600 font-medium">Severity Snapshot</p>
-                  <p class="text-xs text-slate-500 mt-1">A quick visual of current clinical risk based on vitals.</p>
-                  <div class="flex items-center gap-3 mt-3 text-[11px] text-slate-500 font-semibold">
+                  <div class="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Low</span>
                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Moderate</span>
                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span>High</span>
@@ -436,9 +417,8 @@
               <div class="risk-bar">
                 <div class="risk-indicator" id="risk-needle" style="left: 50%"></div>
               </div>
-              <div class="flex justify-between text-[10px] text-slate-400 mt-2 px-1">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-2">
                 <span>Low</span>
-                <span>Moderate</span>
                 <span>Critical</span>
               </div>
             </div>
@@ -446,60 +426,60 @@
             <!-- Vital Signs -->
             <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-teal-500" style="font-size: 20px;">monitor_heart</span>
-                <h3 class="font-semibold text-slate-800">Vital Signs</h3>
+                <span class="material-symbols-outlined text-slate-400" style="font-size: 18px;">monitor_heart</span>
+                <h3 class="text-sm font-semibold text-slate-700">Vital Signs</h3>
               </div>
               
-              <div class="grid grid-cols-3 gap-2" id="vitals-summary">
-                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">HR</p>
-                  <p class="text-base font-bold text-slate-800">--</p>
+              <div class="grid grid-cols-3 gap-2 mb-4" id="vitals-summary">
+                <div class="text-center p-2 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-400 font-medium">HR</p>
+                  <p class="text-sm font-semibold text-slate-700">--</p>
                 </div>
-                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">RR</p>
-                  <p class="text-base font-bold text-slate-800">--</p>
+                <div class="text-center p-2 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-400 font-medium">RR</p>
+                  <p class="text-sm font-semibold text-slate-700">--</p>
                 </div>
-                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">Temp</p>
-                  <p class="text-base font-bold text-slate-800">--</p>
+                <div class="text-center p-2 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-400 font-medium">Temp</p>
+                  <p class="text-sm font-semibold text-slate-700">--</p>
                 </div>
-                <div class="text-center p-2.5 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">SpO2</p>
-                  <p class="text-base font-bold text-slate-800">--</p>
+                <div class="text-center p-2 bg-slate-50 rounded-lg">
+                  <p class="text-[10px] text-slate-400 font-medium">SpO2</p>
+                  <p class="text-sm font-semibold text-slate-700">--</p>
                 </div>
-                <div class="text-center p-2.5 bg-slate-50 rounded-lg col-span-2">
-                  <p class="text-[10px] text-slate-500 font-medium mb-0.5">Blood Pressure</p>
-                  <p class="text-base font-bold text-slate-800">--/--</p>
+                <div class="text-center p-2 bg-slate-50 rounded-lg col-span-2">
+                  <p class="text-[10px] text-slate-400 font-medium">Blood Pressure</p>
+                  <p class="text-sm font-semibold text-slate-700">--/--</p>
                 </div>
               </div>
 
-              <div class="mt-4 pt-4 border-t border-slate-100">
-                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">Vitals Snapshot</p>
-                <div class="space-y-3" id="vitals-chart"></div>
+              <div class="pt-4 border-t border-slate-100">
+                <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-3">Vitals Range</p>
+                <div class="space-y-2" id="vitals-chart"></div>
               </div>
             </div>
           </div>
           
           <!-- AI Clinical Summary -->
           <div class="card overflow-hidden">
-            <div class="bg-gradient-to-r from-accent-500 to-primary-500 px-5 py-3 flex items-center gap-2">
-              <span class="material-symbols-outlined text-white" style="font-size: 20px;">auto_awesome</span>
-              <h3 class="font-semibold text-white">AI Clinical Summary</h3>
+            <div class="bg-slate-800 px-5 py-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-slate-300" style="font-size: 18px;">auto_awesome</span>
+              <h3 class="text-sm font-semibold text-white">AI Clinical Summary</h3>
             </div>
             <div class="p-5">
-              <p class="text-sm text-slate-700 leading-relaxed" id="ai-summary">Select a case to view AI-generated clinical summary.</p>
+              <p class="text-sm text-slate-600 leading-relaxed" id="ai-summary">Select a case to view AI-generated clinical summary.</p>
             </div>
           </div>
           
           <!-- Red Flags -->
-          <div class="card overflow-hidden border-red-200">
-            <div class="bg-gradient-to-r from-red-500 to-rose-500 px-5 py-3 flex items-center gap-2">
-              <span class="material-symbols-outlined text-white" style="font-size: 20px;">warning</span>
-              <h3 class="font-semibold text-white">Clinical Red Flags</h3>
+          <div class="card overflow-hidden">
+            <div class="bg-red-500 px-5 py-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-white" style="font-size: 18px;">warning</span>
+              <h3 class="text-sm font-semibold text-white">Clinical Red Flags</h3>
             </div>
             <div class="p-5" id="red-flags">
-              <p class="text-sm text-emerald-600 flex items-center gap-2">
-                <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
+              <p class="text-sm text-slate-500 flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-500" style="font-size: 16px;">check_circle</span>
                 No red flags detected
               </p>
             </div>
@@ -511,8 +491,8 @@
             <!-- Differential Considerations -->
             <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-indigo-500" style="font-size: 20px;">psychology</span>
-                <h3 class="font-semibold text-slate-800">Differential Dx</h3>
+                <span class="material-symbols-outlined text-slate-400" style="font-size: 18px;">psychology</span>
+                <h3 class="text-sm font-semibold text-slate-700">Differential Dx</h3>
               </div>
               <ul class="space-y-2" id="differential-list">
                 <li class="text-sm text-slate-400">--</li>
@@ -522,8 +502,8 @@
             <!-- Recommended Questions -->
             <div class="card p-5">
               <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-sky-500" style="font-size: 20px;">help</span>
-                <h3 class="font-semibold text-slate-800">Recommended Questions</h3>
+                <span class="material-symbols-outlined text-slate-400" style="font-size: 18px;">help</span>
+                <h3 class="text-sm font-semibold text-slate-700">Recommended Questions</h3>
               </div>
               <ul class="space-y-2" id="recommended-questions">
                 <li class="text-sm text-slate-400">--</li>
@@ -533,14 +513,14 @@
           
           <!-- AI Recommended Next Steps -->
           <div class="card overflow-hidden">
-            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 flex items-center gap-2">
-              <span class="material-symbols-outlined text-white" style="font-size: 20px;">checklist</span>
-              <h3 class="font-semibold text-white">Recommended Next Steps</h3>
+            <div class="bg-slate-700 px-5 py-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-slate-300" style="font-size: 18px;">checklist</span>
+              <h3 class="text-sm font-semibold text-white">Recommended Next Steps</h3>
             </div>
             <div class="p-5">
               <ul class="space-y-2" id="next-steps">
                 <li class="flex items-start gap-2 text-sm text-slate-500">
-                  <span class="material-symbols-outlined text-slate-400" style="font-size: 16px; margin-top: 2px;">arrow_forward</span>
+                  <span class="material-symbols-outlined text-slate-400" style="font-size: 14px; margin-top: 3px;">arrow_forward</span>
                   Select a case to view recommendations
                 </li>
               </ul>
@@ -550,8 +530,8 @@
           <!-- Physician Notes -->
           <div class="card p-5">
             <div class="flex items-center gap-2 mb-4">
-              <span class="material-symbols-outlined text-slate-500" style="font-size: 20px;">edit_note</span>
-              <h3 class="font-semibold text-slate-800">Physician Notes</h3>
+              <span class="material-symbols-outlined text-slate-400" style="font-size: 18px;">edit_note</span>
+              <h3 class="text-sm font-semibold text-slate-700">Physician Notes</h3>
             </div>
             <textarea id="doctor-note" rows="3" placeholder="Add your clinical notes, observations, and reasoning..." class="form-textarea"></textarea>
           </div>
@@ -561,24 +541,24 @@
     </main>
 
     <!-- Fixed Bottom Action Bar -->
-    <div class="fixed bottom-0 left-0 right-0 glass border-t border-slate-200/50 p-3 z-40">
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-40">
       <div class="max-w-xl mx-auto">
         <p class="text-center text-sm text-red-500 font-medium hidden mb-2" id="decision-error"></p>
         <div class="flex flex-wrap gap-2">
-          <button id="decision-delay" class="flex-1 min-w-[120px] py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined" style="font-size: 20px;">schedule</span>
+          <button id="decision-delay" class="flex-1 min-w-[100px] py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size: 18px;">schedule</span>
             <span>Delay</span>
           </button>
-          <button id="decision-approve" class="flex-1 min-w-[150px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined" style="font-size: 20px;">task_alt</span>
-            <span>Approve / Discharge</span>
+          <button id="decision-approve" class="flex-1 min-w-[130px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size: 18px;">task_alt</span>
+            <span>Approve Discharge</span>
           </button>
-          <button id="decision-release" class="hidden flex-1 min-w-[140px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all items-center justify-center gap-2">
-            <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
+          <button id="decision-release" class="hidden flex-1 min-w-[110px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-all items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
             <span>Release</span>
           </button>
-          <button id="decision-admit" class="flex-1 min-w-[120px] py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold rounded-lg shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined" style="font-size: 20px;">check</span>
+          <button id="decision-admit" class="flex-1 min-w-[110px] py-2.5 px-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
             <span>Admit Patient</span>
           </button>
         </div>
@@ -587,26 +567,26 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-16 right-4 transition-all duration-300 z-[100] toast-hidden">
-      <div class="bg-white rounded-xl shadow-2xl border border-slate-100 p-4 flex items-center gap-3 min-w-[280px]">
-        <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" id="toast-icon-wrapper">
+      <div class="bg-white rounded-lg shadow-lg border border-slate-200 p-3 flex items-center gap-3 min-w-[260px]">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" id="toast-icon-wrapper">
           <span class="material-symbols-outlined" id="toast-icon">check_circle</span>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-slate-800 text-sm" id="toast-title"></p>
+          <p class="font-medium text-slate-700 text-sm" id="toast-title"></p>
           <p class="text-xs text-slate-500 truncate" id="toast-message"></p>
         </div>
       </div>
     </div>
 
     <!-- Success Modal -->
-    <div id="success-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
-      <div class="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-sm w-full animate-fade-in-up">
-        <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center" id="modal-icon-wrapper">
-          <span class="material-symbols-outlined text-white" style="font-size: 32px;" id="modal-icon">check</span>
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+      <div class="bg-white rounded-xl p-6 shadow-xl text-center max-w-sm w-full animate-fade-in-up">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" id="modal-icon-wrapper">
+          <span class="material-symbols-outlined text-white" style="font-size: 28px;" id="modal-icon">check</span>
         </div>
-        <h3 class="font-bold text-xl text-slate-800 mb-2" id="modal-title">Decision Saved</h3>
-        <p class="text-slate-500 text-sm mb-6" id="modal-message">The patient record has been updated.</p>
-        <button onclick="closeModal()" class="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl transition-all">
+        <h3 class="font-semibold text-lg text-slate-800 mb-1" id="modal-title">Decision Saved</h3>
+        <p class="text-slate-500 text-sm mb-5" id="modal-message">The patient record has been updated.</p>
+        <button onclick="closeModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg transition-all">
           Continue
         </button>
       </div>
@@ -693,6 +673,6 @@
       };
     </script>
     <script src="../static/js/auth.js"></script>
-    <script src="../static/js/doctor.js?v=12"></script>
+    <script src="../static/js/doctor.js?v=13"></script>
   </body>
 </html>
