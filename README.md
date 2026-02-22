@@ -4,7 +4,9 @@ Clinic Co-Pilot is a lightweight AI-powered clinical intake + decision-support a
 
 **At a glance:** a calmer, safer patient journey — from first symptom to final decision — built for busy clinics and real human stress. We make sure no one is missed, no signal is lost, and every provider has the clearest next step.
 
-![Clinic Co-Pilot hero](static/image/hero.png)
+When a patient walks in scared and in pain, their story often gets fragmented — one form, one hallway, one rushed handoff at a time. Clinic Co-Pilot is designed to restore that continuity: capture the story once, preserve it with empathy, and surface the right clinical signals so nurses and doctors can act with confidence. It does not diagnose — it supports the clinician’s judgment with clear summaries, red flags, and next-step recommendations that keep care moving.
+
+<img src="static/image/hero.png" alt="Clinic Co-Pilot hero" width="800" />
 
 ## Pitch
 
@@ -29,26 +31,14 @@ Captures vitals and completes intake handoff, ensuring structured data reaches t
 
 ![Healthcare provider portal](static/image/page3.jpeg)
 
+**Page 4 — Patient Intake Form**  
+Gives patients a clear, guided way to describe symptoms and history in their preferred language, reducing anxiety and missing details.
+
+![Patient intake form](static/image/page4.jpeg)
+
 ## What It Does
 
-**Clinic Co-Pilot** supports 3 roles:
-
-### 1) Patient Intake
-
-- Patient enters demographics + chief complaint
-- Structured symptom capture (duration, severity, associated symptoms, history)
-
-### 2) Provider Vitals
-
-- Health provider enters vitals (HR, RR, Temp, SpO2, BP, etc.)
-- AI summary is generated from symptoms + vitals (with rule-based fallback)
-
-### 3) Doctor Dashboard
-
-- Doctor receives AI summary, red flags, and recommended questions/steps
-- Workflow status tracking: Pending / Admitted / Approved / Delayed
-- Decisions are saved with timestamps
-- Doctor can translate clinical text into 5 supported languages
+Clinic Co-Pilot supports three roles in a single, continuous flow. The patient starts by telling their story in plain language — symptoms, history, and severity — without needing medical jargon. The nurse adds vitals and ensures the clinical picture is complete. The doctor then receives a concise, structured summary with red flags and recommended questions. The AI does not make diagnoses; it organizes the signal so the clinician can decide faster and with more confidence. Decisions are saved with clear status tracking, and clinical text can be translated for multilingual care.
 
 ## Why It Matters
 

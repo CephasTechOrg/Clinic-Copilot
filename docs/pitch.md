@@ -1,59 +1,13 @@
 # Clinic Co-Pilot - Pitch (AI in Healthcare)
 
-## Hook
-A patient arrives with chest tightness and dizziness after hours of waiting.
-By the time they see a doctor, the visit is rushed.
-The patient feels unheard, and the doctor is overloaded.
+A patient arrives scared, chest tightness and dizziness after hours of waiting. By the time the doctor appears, the story is fractured: a form here, a hallway conversation there, a rushed handoff at the end. Nobody is careless. Everyone is overloaded. In that gap, the quiet details that matter most can disappear.
 
-In busy clinics, details are scattered across forms, quick notes, and memory.
-Important signals can be missed, not from neglect, but from pressure and time.
+Clinic Co-Pilot closes that gap. It captures the patient story once, preserves it with empathy, and delivers the right clinical signals at the exact moment they are needed.
 
-## Problem
-Today, intake and triage are:
-- Fragmented (symptoms here, vitals there, notes elsewhere)
-- Slow (repeating questions, rewriting summaries, hunting for context)
-- Risky under overload (red flags can be overlooked)
-- Frustrating for patients and clinicians
+The patient begins with a guided intake form, in their preferred language, describing symptoms, history, and severity in plain words. The nurse adds vitals to complete the clinical picture. From there, the system produces a concise, clinician-ready brief: a short summary, priority level, red-flag alerts, and suggested questions and next steps. The doctor remains the final authority, choosing to admit, delay, or discharge, while the system records the decision clearly.
 
-Clinics do not need more complexity.
-They need clarity at the moment it matters.
+This is not a diagnostic engine. It is a decision-support companion that organizes signal and reduces noise so clinicians can move faster, safer, and with more confidence.
 
-## Solution
-Clinic Co-Pilot turns raw intake and vitals into a clean, structured clinical snapshot.
+In the demo, you watch a raw patient narrative become a coherent clinical summary in seconds. What was scattered becomes a single, trustworthy thread. The patient feels heard. The nurse feels supported. The doctor sees what matters without the hunt.
 
-Flow:
-1. Patient fills a guided intake form (symptoms, duration, severity, history).
-2. Provider adds vitals (HR, RR, temp, SpO2, BP, etc.).
-3. AI produces a clinician-ready brief:
-   - Short summary
-   - Priority level (LOW / MED / HIGH)
-   - Red flag alerts
-   - Differential considerations
-   - Suggested questions and next steps
-4. Doctor edits notes and records a decision (admit / not admit).
-
-The doctor remains the final authority. The AI is assistive, not diagnostic.
-
-## Why This Wins
-- Faster: reduces manual summarization and repeated intake.
-- Safer: highlights red flags under time pressure.
-- Human-centered: gives clinicians more time to listen.
-- Practical: lightweight MVP built on SQLite + FastAPI + HTML/CSS.
-
-## Demo Flow
-1. Patient submits intake.
-2. Provider enters vitals and forwards to doctor.
-3. Doctor sees the AI summary, red flags, and priority.
-4. Doctor adds a note and submits a decision.
-
-The wow moment: raw text + vitals become a clear, structured brief in seconds.
-
-## Tech Stack
-- FastAPI (backend + API)
-- SQLite (local data storage)
-- HTML/CSS/JS (dashboards)
-- AI summary service with safe fallback rules
-
-## Safety Note
-Clinic Co-Pilot is a prototype decision-support tool.
-It does not diagnose and does not replace clinical judgment.
+Clinic Co-Pilot turns chaos into clarity, a small, focused tool with real clinical impact, fast to adopt, easy to run, and safe by design.
