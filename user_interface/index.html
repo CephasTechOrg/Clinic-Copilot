@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clinic Co-pilot | AI-Powered Clinical Intake</title>
+  <title>Greenfield Medical Center | Patient Portal</title>
   <script>
     (function() {
       const isFile = window.location.protocol === 'file:';
@@ -62,7 +62,7 @@
     }
     .card-hover:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.15);
+      box-shadow: 0 16px 48px -12px rgba(0,0,0,0.12);
     }
   </style>
 </head>
@@ -74,11 +74,11 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center">
-            <span class="material-symbols-outlined text-white" style="font-size: 22px;">ecg_heart</span>
+            <span class="material-symbols-outlined text-white" style="font-size: 22px;">local_hospital</span>
           </div>
           <div>
-            <h1 class="text-lg font-bold text-slate-900 leading-tight">Clinic Co-pilot</h1>
-            <p class="text-xs text-slate-500 -mt-0.5 hidden sm:block">AI-Powered Clinical Intake</p>
+            <h1 class="text-lg font-bold text-slate-900 leading-tight">Greenfield Medical Center</h1>
+            <p class="text-xs text-slate-500 -mt-0.5 hidden sm:block">Patient Portal</p>
           </div>
         </div>
         <div class="flex items-center gap-3">
@@ -99,106 +99,123 @@
 
   <!-- Hero Section -->
   <section class="hero-gradient min-h-screen flex items-center pt-16">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24 w-full">
-      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-20 w-full">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
         
         <!-- Left Content -->
-        <div class="text-white">
+        <div class="text-white order-2 lg:order-1">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full mb-6">
             <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
             <span class="text-sm font-medium text-white/90">HIPAA Compliant & Secure</span>
           </div>
           
+          <p class="text-blue-200 font-medium mb-2">Welcome to</p>
           <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-            Streamline Your
-            <span class="block text-blue-200">Clinical Intake</span>
+            Greenfield
+            <span class="block text-blue-200">Medical Center</span>
           </h1>
           
-          <p class="text-lg sm:text-xl text-blue-100 leading-relaxed mb-8 max-w-xl">
-            Skip the waiting room paperwork. Our AI-powered system collects patient history, 
-            generates clinical summaries, and flags urgent cases — before the doctor even walks in.
+          <p class="text-lg text-blue-100 leading-relaxed mb-8 max-w-lg">
+            Your health is our priority. Complete your intake forms online before your visit 
+            and spend less time in the waiting room. Our smart system ensures your care team 
+            is prepared the moment you arrive.
           </p>
           
-          <div class="flex flex-col sm:flex-row gap-4">
-            <a href="#" id="hero-patient-link" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-brand-700 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-lg shadow-black/10">
+          <div class="flex flex-col sm:flex-row gap-4 mb-12">
+            <a href="#" id="hero-patient-link" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors">
               <span class="material-symbols-outlined" style="font-size: 20px;">person</span>
               Start Patient Check-In
             </a>
-            <a href="#how-it-works" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
+            <a href="#how-it-works" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-colors border border-white/20">
               Learn How It Works
-              <span class="material-symbols-outlined" style="font-size: 18px;">expand_more</span>
             </a>
           </div>
           
           <!-- Trust Indicators -->
-          <div class="mt-12 pt-8 border-t border-white/10">
-            <div class="grid grid-cols-3 gap-6">
-              <div>
-                <p class="text-3xl font-bold text-white">50%</p>
-                <p class="text-sm text-blue-200">Faster Intake</p>
-              </div>
-              <div>
-                <p class="text-3xl font-bold text-white">AI</p>
-                <p class="text-sm text-blue-200">Triage Support</p>
-              </div>
-              <div>
-                <p class="text-3xl font-bold text-white">24/7</p>
-                <p class="text-sm text-blue-200">Availability</p>
-              </div>
+          <div class="grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
+            <div>
+              <p class="text-2xl font-bold text-white">50%</p>
+              <p class="text-sm text-blue-200">Faster Intake</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-white">AI</p>
+              <p class="text-sm text-blue-200">Triage Support</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-white">24/7</p>
+              <p class="text-sm text-blue-200">Availability</p>
             </div>
           </div>
         </div>
         
-        <!-- Right - Portal Cards -->
-        <div class="space-y-4">
-          
-          <!-- Patient Card -->
-          <div class="bg-white rounded-xl p-6 shadow-xl card-hover">
-            <div class="flex items-start gap-4">
-              <div class="w-14 h-14 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
-                <span class="material-symbols-outlined text-brand-600" style="font-size: 28px;">person_add</span>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-bold text-slate-900 mb-1">Patient Portal</h3>
-                <p class="text-slate-500 text-sm mb-4">Complete your intake forms digitally. No login required.</p>
-                <a href="#" id="card-patient-link" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg transition-colors">
-                  Begin Check-In
-                  <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
-                </a>
-              </div>
+        <!-- Right - Hero Image -->
+        <div class="order-1 lg:order-2">
+          <div class="relative">
+            <!-- Main Image -->
+            <div class="rounded-2xl overflow-hidden shadow-2xl shadow-black/30 border border-white/10">
+              <img 
+                src="/static/image/hero.png" 
+                alt="Clinic Co-pilot Dashboard" 
+                class="w-full h-auto"
+              />
             </div>
-          </div>
-          
-          <!-- Staff Cards Row -->
-          <div class="grid sm:grid-cols-2 gap-4">
-            
-            <!-- Nurse Card -->
-            <a href="#" id="card-nurse-link" class="bg-white rounded-xl p-5 shadow-lg card-hover block group">
-              <div class="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center mb-4 group-hover:bg-emerald-200 transition-colors">
-                <span class="material-symbols-outlined text-emerald-600" style="font-size: 24px;">stethoscope</span>
-              </div>
-              <h4 class="text-lg font-bold text-slate-900 mb-1">Nurse / Provider</h4>
-              <p class="text-slate-500 text-sm mb-3">Record vitals and verify patient data</p>
-              <span class="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
-                Login
-                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
-              </span>
-            </a>
-            
-            <!-- Doctor Card -->
-            <a href="#" id="card-doctor-link" class="bg-white rounded-xl p-5 shadow-lg card-hover block group">
-              <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
-                <span class="material-symbols-outlined text-purple-600" style="font-size: 24px;">medical_services</span>
-              </div>
-              <h4 class="text-lg font-bold text-slate-900 mb-1">Physician</h4>
-              <p class="text-slate-500 text-sm mb-3">Review AI summaries and make decisions</p>
-              <span class="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
-                Login
-                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
-              </span>
-            </a>
+            <!-- Decorative Elements -->
+            <div class="absolute -bottom-6 -right-6 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-10"></div>
+            <div class="absolute -top-6 -left-6 w-56 h-56 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Portal Cards Section -->
+  <section class="py-16 lg:py-20 bg-slate-50">
+    <div class="max-w-5xl mx-auto px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">Choose Your Portal</h2>
+        <p class="text-slate-500">Select your role to get started</p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        
+        <!-- Patient Card -->
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 card-hover">
+          <div class="w-14 h-14 rounded-xl bg-brand-100 flex items-center justify-center mb-5">
+            <span class="material-symbols-outlined text-brand-600" style="font-size: 28px;">person_add</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Patient Portal</h3>
+          <p class="text-slate-500 text-sm mb-5">Complete your intake forms digitally. No login required.</p>
+          <a href="#" id="card-patient-link" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg transition-colors w-full justify-center">
+            Begin Check-In
+            <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+          </a>
+        </div>
+        
+        <!-- Nurse Card -->
+        <a href="#" id="card-nurse-link" class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 card-hover block group">
+          <div class="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center mb-5 group-hover:bg-emerald-200 transition-colors">
+            <span class="material-symbols-outlined text-emerald-600" style="font-size: 28px;">stethoscope</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Nurse / Provider</h3>
+          <p class="text-slate-500 text-sm mb-5">Record vitals and verify patient data</p>
+          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
+            Login to Portal
+            <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+          </span>
+        </a>
+        
+        <!-- Doctor Card -->
+        <a href="#" id="card-doctor-link" class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 card-hover block group">
+          <div class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center mb-5 group-hover:bg-purple-200 transition-colors">
+            <span class="material-symbols-outlined text-purple-600" style="font-size: 28px;">medical_services</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Physician</h3>
+          <p class="text-slate-500 text-sm mb-5">Review AI summaries and make decisions</p>
+          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
+            Login to Portal
+            <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+          </span>
+        </a>
       </div>
     </div>
   </section>
@@ -318,8 +335,8 @@
   <!-- CTA Section -->
   <section class="py-16 lg:py-20 bg-slate-900">
     <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-      <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to Streamline Your Clinic?</h2>
-      <p class="text-lg text-slate-400 mb-8">Start using Clinic Co-pilot today — no setup required.</p>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to Begin Your Visit?</h2>
+      <p class="text-lg text-slate-400 mb-8">Complete your check-in online and save time at the clinic.</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="#" id="cta-patient-link" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors">
           <span class="material-symbols-outlined" style="font-size: 20px;">person</span>
@@ -339,16 +356,16 @@
       <div class="flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center">
-            <span class="material-symbols-outlined text-slate-400" style="font-size: 20px;">ecg_heart</span>
+            <span class="material-symbols-outlined text-slate-400" style="font-size: 20px;">local_hospital</span>
           </div>
-          <span class="text-sm font-semibold text-slate-400">Clinic Co-pilot</span>
+          <span class="text-sm font-semibold text-slate-400">Greenfield Medical Center</span>
         </div>
         <div class="flex items-center gap-6 text-sm text-slate-500">
           <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
           <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
-          <a href="#" class="hover:text-white transition-colors">Contact</a>
+          <a href="#" class="hover:text-white transition-colors">Contact Us</a>
         </div>
-        <p class="text-xs text-slate-600">© 2026 Clinic Co-pilot. All rights reserved.</p>
+        <p class="text-xs text-slate-600">© 2026 Greenfield Medical Center. All rights reserved.</p>
       </div>
     </div>
   </footer>
