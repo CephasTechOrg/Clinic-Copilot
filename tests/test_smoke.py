@@ -1,9 +1,4 @@
-import os
 import uuid
-
-os.environ.setdefault("JWT_SECRET_KEY", "test-secret")
-os.environ.setdefault("GEMINI_API_KEY", "")
-os.environ.setdefault("GEMINI_MODEL_NAME", "gemini-3-flash-preview")
 
 from fastapi.testclient import TestClient
 
