@@ -1,15 +1,19 @@
 (function () {
+  const queue = document.getElementById("doctor-queue");
+  const queueEmpty = document.getElementById("doctor-queue-empty");
+  const queueSubtitle = document.getElementById("doctor-queue-subtitle");
+
   const patientName = document.getElementById("patient-name");
-  const patientId = document.getElementById("patient-id");
+  const patientMeta = document.getElementById("patient-meta");
   const priorityPill = document.getElementById("priority-pill");
   const chiefComplaint = document.getElementById("chief-complaint");
-  const urgencyScore = document.getElementById("urgency-score");
-  const urgencyLabel = document.getElementById("urgency-label");
+  const vitalsSummary = document.getElementById("vitals-summary");
   const aiSummary = document.getElementById("ai-summary");
   const redFlags = document.getElementById("red-flags");
   const differentialList = document.getElementById("differential-list");
   const nextSteps = document.getElementById("next-steps");
   const doctorNote = document.getElementById("doctor-note");
+
   const decisionAdmit = document.getElementById("decision-admit");
   const decisionDeny = document.getElementById("decision-deny");
   const decisionError = document.getElementById("decision-error");
@@ -21,126 +25,102 @@
     if (!priorityPill) return;
     priorityPill.textContent = norm;
     priorityPill.className =
-      "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider border " +
+      "text-xs font-semibold px-2 py-1 rounded-full " +
       (norm === "HIGH"
-        ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800"
+        ? "bg-red-100 text-red-600"
         : norm === "MED"
-        ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+        ? "bg-amber-100 text-amber-600"
         : norm === "LOW"
-        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700");
-
-    if (urgencyScore && urgencyLabel) {
-      const score = norm === "HIGH" ? 90 : norm === "MED" ? 60 : norm === "LOW" ? 30 : 0;
-      urgencyScore.textContent = `${score}%`;
-      urgencyLabel.textContent =
-        norm === "HIGH" ? "CRITICAL RISK" : norm === "MED" ? "MODERATE RISK" : "LOW RISK";
-    }
+        ? "bg-emerald-100 text-emerald-600"
+        : "bg-slate-100 text-slate-600");
   };
 
-  const renderList = (container, items, emptyText) => {
+  const renderList = (container, items) => {
     if (!container) return;
     if (!items || items.length === 0) {
-      container.innerHTML = `<div class="text-sm text-slate-400">${emptyText}</div>`;
+      container.innerHTML = "<li class=\"text-slate-400\">-</li>";
       return;
     }
-    container.innerHTML = items
+    container.innerHTML = items.map((item) => `<li>${item}</li>`).join("");
+  };
+
+  const renderQueue = (items) => {
+    if (!queue) return;
+    queue.innerHTML = items
       .map(
-        (item) => `
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-red-500 text-sm">check_circle</span>
-            <p class="text-sm font-medium">${item}</p>
-          </div>
+        (i) => `
+          <button class="text-left border border-slate-200 rounded-lg p-3 hover:bg-slate-50" data-id="${i.id}">
+            <div class="font-semibold">${i.full_name}, ${i.age}</div>
+            <div class="text-xs text-slate-500">${i.chief_complaint}</div>
+            <div class="text-xs text-slate-400">${i.created_at}</div>
+          </button>
         `
       )
       .join("");
   };
 
-  const renderDifferential = (items) => {
-    if (!differentialList) return;
-    if (!items || items.length === 0) {
-      differentialList.innerHTML =
-        '<div class="p-3 text-sm text-slate-400">No differential suggestions.</div>';
-      return;
-    }
-    differentialList.innerHTML = items
-      .map(
-        (item) => `
-          <div class="p-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="size-2 rounded-full bg-red-500"></div>
-              <p class="text-sm font-semibold">${item}</p>
-            </div>
-            <span class="text-xs font-bold text-slate-400">AI</span>
-          </div>
-        `
-      )
-      .join("");
-  };
-
-  const renderNextSteps = (items) => {
-    if (!nextSteps) return;
-    if (!items || items.length === 0) {
-      nextSteps.innerHTML = `<li class="flex gap-2"><span class="material-symbols-outlined text-sm">arrow_forward</span>No next steps.</li>`;
-      return;
-    }
-    nextSteps.innerHTML = items
-      .map(
-        (item) => `
-          <li class="flex gap-2">
-            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-            ${item}
-          </li>
-        `
-      )
-      .join("");
-  };
-
-  const loadCase = async (intakeId) => {
-    const res = await fetch(`/api/intakes/${encodeURIComponent(intakeId)}`);
-    if (!res.ok) throw new Error("Failed to load case");
-    const data = await res.json();
+  const updateDetails = (data) => {
     currentIntakeId = data.id;
-
     if (patientName) {
-      patientName.textContent = `${data.full_name}, ${data.age}${data.sex ? data.sex[0] : ""}`;
+      patientName.textContent = `${data.full_name}, ${data.age} ${data.sex || ""}`.trim();
     }
-    if (patientId) patientId.textContent = `ID: #${data.id}`;
-    if (chiefComplaint) {
-      chiefComplaint.textContent = `Chief Complaint: ${data.chief_complaint || "-"}`;
-    }
-    if (aiSummary) {
-      aiSummary.textContent = data.clinical_summary?.short_summary || "AI analysis pending.";
-    }
-    if (doctorNote && data.clinical_summary?.doctor_note) {
-      doctorNote.value = data.clinical_summary.doctor_note;
-    }
+    if (patientMeta) patientMeta.textContent = `ID: #${data.id}`;
+    if (chiefComplaint) chiefComplaint.textContent = data.chief_complaint || "-";
+    if (aiSummary) aiSummary.textContent = data.clinical_summary?.short_summary || "-";
 
     setPriority(data.clinical_summary?.priority_level);
-    renderList(
-      redFlags,
-      data.clinical_summary?.red_flags || [],
-      "No red flags recorded."
-    );
-    renderDifferential(data.clinical_summary?.differential || []);
-    renderNextSteps(data.clinical_summary?.recommended_next_steps || []);
+
+    if (vitalsSummary) {
+      if (data.vitals) {
+        vitalsSummary.textContent = `HR ${data.vitals.heart_rate} | RR ${data.vitals.respiratory_rate} | Temp ${data.vitals.temperature_c}C | SpO2 ${data.vitals.spo2}% | BP ${data.vitals.systolic_bp}/${data.vitals.diastolic_bp}`;
+      } else {
+        vitalsSummary.textContent = "-";
+      }
+    }
+
+    renderList(redFlags, data.clinical_summary?.red_flags || []);
+    renderList(differentialList, data.clinical_summary?.differential || []);
+    renderList(nextSteps, data.clinical_summary?.recommended_next_steps || []);
+
+    if (doctorNote) {
+      doctorNote.value = data.clinical_summary?.doctor_note || "";
+    }
   };
 
-  const loadInitial = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const intakeId = params.get("intake_id");
-    if (intakeId) {
-      await loadCase(intakeId);
-      return;
-    }
+  const loadCase = async (id) => {
+    const res = await fetch(`/api/intakes/${encodeURIComponent(id)}`);
+    if (!res.ok) throw new Error("Failed to load case");
+    const data = await res.json();
+    updateDetails(data);
+  };
+
+  const loadQueue = async () => {
     const res = await fetch("/api/intakes");
     const data = await res.json();
     const items = Array.isArray(data) ? data : data.items || [];
-    const first = items.find((i) => i.has_summary) || items[0];
-    if (first) {
-      await loadCase(first.id);
+    const ready = items.filter((i) => i.has_summary);
+
+    renderQueue(ready);
+    if (queueSubtitle) queueSubtitle.textContent = `${ready.length} cases ready for review`;
+    if (queueEmpty) queueEmpty.classList.toggle("hidden", ready.length > 0);
+
+    const params = new URLSearchParams(window.location.search);
+    const intakeId = params.get("intake_id");
+    if (intakeId && ready.find((i) => String(i.id) === String(intakeId))) {
+      await loadCase(intakeId);
+    } else if (ready.length > 0) {
+      await loadCase(ready[0].id);
     }
   };
+
+  if (queue) {
+    queue.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-id]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-id");
+      if (id) loadCase(id).catch(console.error);
+    });
+  }
 
   const submitDecision = async (decision) => {
     if (!currentIntakeId) return;
@@ -170,12 +150,8 @@
     }
   };
 
-  if (decisionAdmit) {
-    decisionAdmit.addEventListener("click", () => submitDecision("ADMIT"));
-  }
-  if (decisionDeny) {
-    decisionDeny.addEventListener("click", () => submitDecision("NOT_ADMIT"));
-  }
+  if (decisionAdmit) decisionAdmit.addEventListener("click", () => submitDecision("ADMIT"));
+  if (decisionDeny) decisionDeny.addEventListener("click", () => submitDecision("NOT_ADMIT"));
 
-  loadInitial().catch((err) => console.error(err));
+  loadQueue().catch(console.error);
 })();
